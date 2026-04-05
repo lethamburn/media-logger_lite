@@ -8,6 +8,7 @@
       name="description"
       content="Media Logger Lite"
     />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -72,10 +73,12 @@
 
               <div class="field-grid">
                 <label class="field field-span-2">
+                  <span class="field-label">Titulo</span>
                   <input id="title" name="title" type="text" required maxlength="120" placeholder="Titulo" />
                 </label>
 
                 <label class="field">
+                  <span class="field-label">Tipo</span>
                   <select id="type" name="type" required>
                     <option value="movie">Pelicula</option>
                     <option value="series">Serie</option>
@@ -87,6 +90,7 @@
                 </label>
 
                 <label class="field">
+                  <span class="field-label">Estado</span>
                   <select id="status" name="status" required>
                     <option value="completed">Completado</option>
                     <option value="in-progress">En curso</option>
@@ -97,10 +101,12 @@
                 </label>
 
                 <label class="field">
+                  <span class="field-label">Fecha</span>
                   <input id="date" name="date" type="date" required />
                 </label>
 
                 <label class="field">
+                  <span class="field-label">Nota</span>
                   <select id="rating" name="rating">
                     <option value="0">Sin nota</option>
                     <option value="0.5">0.5</option>
@@ -117,10 +123,12 @@
                 </label>
 
                 <label class="field context-series" id="field-season">
+                  <span class="field-label">Temporada</span>
                   <input id="season" name="season" type="number" min="1" max="999" placeholder="T" title="Temporada" />
                 </label>
 
                 <label class="field field-span-2" id="field-cover">
+                  <span class="field-label">Caratula URL</span>
                   <input id="cover" name="cover" type="url" placeholder="Caratula URL" required />
                 </label>
               </div>
@@ -151,6 +159,7 @@
                 </label>
 
                 <label class="field" id="field-notes">
+                  <span class="field-label">Notas</span>
                   <textarea
                     id="notes"
                     name="notes"

@@ -197,7 +197,7 @@ function formatStars(value) {
 
   const fullStars = Math.floor(numericValue);
   const hasHalf = numericValue % 1 !== 0;
-  return `${"\u2605".repeat(fullStars)}${hasHalf ? "\u00bd" : ""} ${numericValue}/5`;
+  return `${"\u2605".repeat(fullStars)}${hasHalf ? "\u00bd" : ""}`;
 }
 
 function formatDate(value) {
@@ -615,52 +615,52 @@ async function createShareImage(entry) {
   context.stroke();
 
   context.fillStyle = "#18181b";
-  roundRectPath(context, 110, 110, 320, 480, 28);
+  roundRectPath(context, 120, 110, 840, 520, 30);
   context.fill();
 
   if (cover) {
     context.save();
-    roundRectPath(context, 110, 110, 320, 480, 28);
+    roundRectPath(context, 120, 110, 840, 520, 30);
     context.clip();
-    context.drawImage(cover, 110, 110, 320, 480);
+    context.drawImage(cover, 120, 110, 840, 520);
     context.restore();
   } else {
     context.fillStyle = "#a1a1aa";
-    context.font = "600 28px ui-sans-serif, system-ui, sans-serif";
+    context.font = "600 34px ui-sans-serif, system-ui, sans-serif";
     context.textAlign = "center";
-    context.fillText("Caratula no disponible", 270, 360);
+    context.fillText("Caratula no disponible", 540, 378);
     context.textAlign = "left";
   }
 
   context.fillStyle = "#fafafa";
-  context.font = "600 26px ui-sans-serif, system-ui, sans-serif";
-  context.fillText("Media Logger Lite", 110, 660);
+  context.font = "600 24px ui-sans-serif, system-ui, sans-serif";
+  context.fillText("Media Logger Lite", 120, 700);
 
-  context.font = "700 62px ui-sans-serif, system-ui, sans-serif";
-  drawWrappedText(context, entry.title || "Sin titulo", 110, 740, 860, 72, 3);
+  context.font = "700 60px ui-sans-serif, system-ui, sans-serif";
+  drawWrappedText(context, entry.title || "Sin titulo", 120, 772, 840, 68, 3);
 
   context.fillStyle = "#a1a1aa";
-  context.font = "500 26px ui-sans-serif, system-ui, sans-serif";
+  context.font = "500 24px ui-sans-serif, system-ui, sans-serif";
   const metaParts = [TYPE_LABELS[entry.type], STATUS_LABELS[entry.status], formatDate(entry.date)];
   if (entry.type === "series" && entry.season) {
     metaParts.push(`T${entry.season}`);
   }
-  context.fillText(metaParts.join("  \u2022  "), 110, 970);
+  context.fillText(metaParts.join("  \u2022  "), 120, 1016);
 
   context.fillStyle = "#fafafa";
-  context.font = "600 36px ui-sans-serif, system-ui, sans-serif";
-  context.fillText(formatStars(entry.rating), 110, 1035);
+  context.font = "600 40px ui-sans-serif, system-ui, sans-serif";
+  context.fillText(formatStars(entry.rating), 120, 1076);
 
   if (entry.notes) {
     context.fillStyle = "#e4e4e7";
     context.font = "500 24px ui-sans-serif, system-ui, sans-serif";
-    drawWrappedText(context, entry.notes, 110, 1088, 860, 34, 4);
+    drawWrappedText(context, entry.notes, 120, 1130, 840, 34, 3);
   }
 
-  const statY = 1110;
-  const statBoxWidth = 190;
-  const statGap = 18;
-  const statStartX = 500;
+  const statY = 1180;
+  const statBoxWidth = 195;
+  const statGap = 15;
+  const statStartX = 120;
   const statLabels = [
     ["Total", String(stats.total)],
     ["Completados", String(stats.completed)],
@@ -704,7 +704,7 @@ async function shareEntryCard(entry) {
     if (navigator.canShare && navigator.share && navigator.canShare({ files: [file] })) {
       await navigator.share({
         title: entry.title,
-        text: `${entry.title} \u2022 ${formatStars(entry.rating)}`,
+        text: entry.title,
         files: [file],
       });
       return;

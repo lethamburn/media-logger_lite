@@ -165,6 +165,13 @@ h2 {
 .field {
   display: grid;
   align-items: center;
+  gap: 6px;
+}
+
+.field-label {
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-align: center;
 }
 
 .field input,
@@ -190,7 +197,7 @@ h2 {
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--panel-soft);
-  max-width: 220px;
+  width: min(220px, 100%);
   margin: 0 auto;
 }
 
@@ -436,6 +443,7 @@ h2 {
   border: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 0.74rem;
   color: var(--text);
+  letter-spacing: 0.04em;
 }
 
 .entry-body {
