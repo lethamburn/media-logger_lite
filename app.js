@@ -34,6 +34,7 @@ const state = {
     typeView: "all",
     status: "all",
     sortBy: "date-desc",
+    layout: "grid",
   },
   editingId: null,
   coverValidationToken: 0,
@@ -47,13 +48,13 @@ const seasonInput = document.querySelector("#season");
 const ratingInput = document.querySelector("#rating");
 const statusInput = document.querySelector("#status");
 const coverInput = document.querySelector("#cover");
-const notesInput = document.querySelector("#notes");
 const revisitInput = document.querySelector("#revisit");
 const revisitLabel = document.querySelector("#revisit-label");
 const saveButton = document.querySelector("#save-button");
 const cancelEditButton = document.querySelector("#cancel-edit-button");
 const importInput = document.querySelector("#import-file");
 const typeTabs = [...document.querySelectorAll(".tab-button")];
+const viewButtons = [...document.querySelectorAll(".view-button")];
 const seasonField = document.querySelector("#field-season");
 const revisitField = document.querySelector("#field-revisit");
 const extraFields = document.querySelector("#extra-fields");
@@ -92,7 +93,6 @@ function normalizeImportedEntry(entry) {
     season: type === "series" ? Number(entry.season) || null : null,
     revisit: Boolean(entry.revisit),
     cover: String(entry.cover || "").trim(),
-    notes: String(entry.notes || "").trim(),
     createdAt: entry.createdAt || new Date().toISOString(),
     updatedAt: entry.updatedAt || new Date().toISOString(),
   };
@@ -163,12 +163,7 @@ function updateSeriesFields() {
 }
 
 function shouldShowExtras() {
-  return (
-    getExtrasPreference() ||
-    Boolean(notesInput.value.trim()) ||
-    revisitInput.checked ||
-    state.editingId !== null
-  );
+  return getExtrasPreference() || revisitInput.checked || state.editingId !== null;
 }
 
 function updateConditionalFields() {
@@ -247,8 +242,7 @@ function getFilteredEntries() {
     .filter((entry) => {
       const inSearch =
         !searchTerm ||
-        entry.title.toLowerCase().includes(searchTerm) ||
-        entry.notes.toLowerCase().includes(searchTerm);
+        entry.title.toLowerCase().includes(searchTerm);
       const inTypeView =
         state.filters.typeView === "all" || entry.type === state.filters.typeView;
       const inStatus =
@@ -274,6 +268,13 @@ function renderTypeTabs() {
   });
 }
 
+function renderViewButtons() {
+  viewButtons.forEach((button) => {
+    button.classList.toggle("active", button.dataset.layout === state.filters.layout);
+  });
+  entriesGrid.dataset.layout = state.filters.layout;
+}
+
 function renderEntries() {
   const filteredEntries = getFilteredEntries();
   entriesGrid.innerHTML = "";
@@ -282,8 +283,8 @@ function renderEntries() {
   if (filteredEntries.length === 0) {
     entriesGrid.innerHTML = `
       <article class="panel empty-state">
-        <h3>No hay entradas</h3>
-        <p>Anade una nueva.</p>
+        <h3>Vacio por aqui</h3>
+        <p>Anade algo nuevo y aparecera aqui.</p>
       </article>
     `;
     return;
@@ -301,8 +302,8 @@ function renderEntries() {
     const revisitPill = clone.querySelector(".revisit-pill");
     const title = clone.querySelector(".entry-title");
     const meta = clone.querySelector(".entry-meta");
-    const notes = clone.querySelector(".entry-notes");
     const shareButton = clone.querySelector(".share-button");
+    const storyButton = clone.querySelector(".story-button");
     const editButton = clone.querySelector(".edit-button");
     const deleteButton = clone.querySelector(".delete-button");
 
@@ -318,10 +319,11 @@ function renderEntries() {
     title.textContent = entry.title;
     meta.textContent = getEntryMeta(entry);
     ratingBadge.textContent = formatStars(entry.rating);
-    notes.textContent = entry.notes || "Sin notas.";
     shareButton.hidden = entry.status !== "completed";
+    storyButton.hidden = entry.status !== "completed";
 
-    shareButton.addEventListener("click", () => shareEntryCard(entry));
+    shareButton.addEventListener("click", () => shareEntryCard(entry, "square"));
+    storyButton.addEventListener("click", () => shareEntryCard(entry, "story"));
     editButton.addEventListener("click", () => startEditing(entry.id));
     deleteButton.addEventListener("click", () => deleteEntry(entry.id));
 
@@ -334,6 +336,7 @@ function renderEntries() {
 function render() {
   renderStats();
   renderTypeTabs();
+  renderViewButtons();
   renderEntries();
 }
 
@@ -406,7 +409,6 @@ function populateForm(entry) {
   document.querySelector("#season").value = entry.season || "";
   document.querySelector("#cover").value = entry.cover || "";
   document.querySelector("#revisit").checked = entry.revisit;
-  document.querySelector("#notes").value = entry.notes || "";
   cancelEditButton.hidden = false;
   saveButton.textContent = "Actualizar";
   updateSeriesFields();
@@ -429,7 +431,6 @@ function normalizeEntry(formData, idOverride = null) {
     season: isSeries ? Number(formData.get("season")) || null : null,
     revisit: formData.get("revisit") === "on",
     cover: String(formData.get("cover")).trim(),
-    notes: String(formData.get("notes")).trim(),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -595,49 +596,66 @@ function drawWrappedText(context, text, x, y, maxWidth, lineHeight, maxLines) {
 }
 
 async function createShareImage(entry) {
+  return createShareArtwork(entry, "square");
+}
+
+async function createShareArtwork(entry, format = "square") {
   const canvas = document.createElement("canvas");
-  canvas.width = 1080;
-  canvas.height = 1350;
+  canvas.width = format === "story" ? 1080 : 1080;
+  canvas.height = format === "story" ? 1920 : 1350;
   const context = canvas.getContext("2d");
   const cover = await loadImageForCanvas(entry.cover);
   const stats = getLibraryStats();
+  const isStory = format === "story";
+  const panelY = isStory ? 120 : 60;
+  const panelHeight = isStory ? 1680 : 1230;
+  const coverHeight = isStory ? 760 : 520;
+  const titleY = isStory ? 1010 : 772;
+  const metaY = isStory ? 1248 : 1016;
+  const ratingY = isStory ? 1330 : 1076;
+  const statY = isStory ? 1510 : 1180;
 
-  context.fillStyle = "#09090b";
+  const background = context.createLinearGradient(0, 0, 0, canvas.height);
+  background.addColorStop(0, "#0f1013");
+  background.addColorStop(1, "#09090b");
+  context.fillStyle = background;
   context.fillRect(0, 0, canvas.width, canvas.height);
 
-  context.fillStyle = "#111113";
-  roundRectPath(context, 60, 60, 960, 1230, 36);
+  context.fillStyle = "rgba(19,19,22,0.92)";
+  roundRectPath(context, 60, panelY, 960, panelHeight, 36);
   context.fill();
 
   context.strokeStyle = "rgba(255,255,255,0.08)";
   context.lineWidth = 2;
-  roundRectPath(context, 60, 60, 960, 1230, 36);
+  roundRectPath(context, 60, panelY, 960, panelHeight, 36);
   context.stroke();
 
-  context.fillStyle = "#18181b";
-  roundRectPath(context, 120, 110, 840, 520, 30);
+  context.fillStyle = "rgba(255,255,255,0.04)";
+  roundRectPath(context, 120, panelY + 50, 840, coverHeight, 30);
   context.fill();
 
   if (cover) {
     context.save();
-    roundRectPath(context, 120, 110, 840, 520, 30);
+    roundRectPath(context, 120, panelY + 50, 840, coverHeight, 30);
     context.clip();
-    context.drawImage(cover, 120, 110, 840, 520);
+    context.drawImage(cover, 120, panelY + 50, 840, coverHeight);
+    context.fillStyle = "rgba(9,9,11,0.18)";
+    context.fillRect(120, panelY + 50, 840, coverHeight);
     context.restore();
   } else {
     context.fillStyle = "#a1a1aa";
     context.font = "600 34px ui-sans-serif, system-ui, sans-serif";
     context.textAlign = "center";
-    context.fillText("Caratula no disponible", 540, 378);
+    context.fillText("Caratula no disponible", 540, panelY + 50 + coverHeight / 2);
     context.textAlign = "left";
   }
 
   context.fillStyle = "#fafafa";
-  context.font = "600 24px ui-sans-serif, system-ui, sans-serif";
-  context.fillText("Media Logger Lite", 120, 700);
+  context.font = "600 22px ui-sans-serif, system-ui, sans-serif";
+  context.fillText("Media Logger Lite", 120, isStory ? 940 : 700);
 
   context.font = "700 60px ui-sans-serif, system-ui, sans-serif";
-  drawWrappedText(context, entry.title || "Sin titulo", 120, 772, 840, 68, 3);
+  drawWrappedText(context, entry.title || "Sin titulo", 120, titleY, 840, 68, isStory ? 4 : 3);
 
   context.fillStyle = "#a1a1aa";
   context.font = "500 24px ui-sans-serif, system-ui, sans-serif";
@@ -645,19 +663,12 @@ async function createShareImage(entry) {
   if (entry.type === "series" && entry.season) {
     metaParts.push(`T${entry.season}`);
   }
-  context.fillText(metaParts.join("  \u2022  "), 120, 1016);
+  context.fillText(metaParts.join("  \u2022  "), 120, metaY);
 
   context.fillStyle = "#fafafa";
   context.font = "600 40px ui-sans-serif, system-ui, sans-serif";
-  context.fillText(formatStars(entry.rating), 120, 1076);
+  context.fillText(formatStars(entry.rating), 120, ratingY);
 
-  if (entry.notes) {
-    context.fillStyle = "#e4e4e7";
-    context.font = "500 24px ui-sans-serif, system-ui, sans-serif";
-    drawWrappedText(context, entry.notes, 120, 1130, 840, 34, 3);
-  }
-
-  const statY = 1180;
   const statBoxWidth = 195;
   const statGap = 15;
   const statStartX = 120;
@@ -689,15 +700,15 @@ async function createShareImage(entry) {
   return canvas;
 }
 
-async function shareEntryCard(entry) {
+async function shareEntryCard(entry, format = "square") {
   try {
-    const canvas = await createShareImage(entry);
+    const canvas = await createShareArtwork(entry, format);
     const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
     if (!blob) {
       throw new Error("No se pudo generar la imagen");
     }
 
-    const file = new File([blob], `${entry.title || "media-logger"}.png`, {
+    const file = new File([blob], `${entry.title || "media-logger"}-${format}.png`, {
       type: "image/png",
     });
 
@@ -713,7 +724,7 @@ async function shareEntryCard(entry) {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `${(entry.title || "media-logger").replace(/[^\w\-]+/g, "_")}-share.png`;
+    anchor.download = `${(entry.title || "media-logger").replace(/[^\w\-]+/g, "_")}-${format}.png`;
     anchor.click();
     URL.revokeObjectURL(url);
     showToast("Imagen generada");
@@ -762,7 +773,6 @@ statusInput.addEventListener("change", updateConditionalFields);
 document.querySelector("#title").addEventListener("input", updateSaveButtonState);
 document.querySelector("#date").addEventListener("input", updateSaveButtonState);
 coverInput.addEventListener("input", updateCoverPreview);
-notesInput.addEventListener("input", updateConditionalFields);
 revisitInput.addEventListener("change", updateConditionalFields);
 cancelEditButton.addEventListener("click", resetForm);
 toggleExtrasButton.addEventListener("click", () => {
@@ -796,6 +806,14 @@ typeTabs.forEach((button) => {
   button.addEventListener("click", () => {
     state.filters.typeView = button.dataset.view;
     render();
+  });
+});
+
+viewButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    state.filters.layout = button.dataset.layout;
+    renderViewButtons();
+    renderEntries();
   });
 });
 

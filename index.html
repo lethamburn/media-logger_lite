@@ -71,12 +71,14 @@
             <form id="entry-form" class="entry-form">
               <input type="hidden" id="entry-id" />
 
-              <div class="field-grid">
+              <div class="form-section">
                 <label class="field field-span-2">
                   <span class="field-label">Titulo</span>
                   <input id="title" name="title" type="text" required maxlength="120" placeholder="Titulo" />
                 </label>
+              </div>
 
+              <div class="field-grid form-section">
                 <label class="field">
                   <span class="field-label">Tipo</span>
                   <select id="type" name="type" required>
@@ -126,15 +128,17 @@
                   <span class="field-label">Temporada</span>
                   <input id="season" name="season" type="number" min="1" max="999" placeholder="T" title="Temporada" />
                 </label>
+              </div>
 
+              <div class="form-section">
                 <label class="field field-span-2" id="field-cover">
                   <span class="field-label">Caratula URL</span>
                   <input id="cover" name="cover" type="url" placeholder="Caratula URL" required />
                 </label>
-              </div>
 
-              <div class="cover-preview" id="cover-preview" hidden>
-                <img id="cover-preview-image" alt="Preview de caratula" />
+                <div class="cover-preview" id="cover-preview" hidden>
+                  <img id="cover-preview-image" alt="Preview de caratula" />
+                </div>
               </div>
 
               <button
@@ -149,24 +153,13 @@
                     <path d="M8 3.25a.75.75 0 0 1 .75.75v3.25H12a.75.75 0 0 1 0 1.5H8.75V12a.75.75 0 0 1-1.5 0V8.75H4a.75.75 0 0 1 0-1.5h3.25V4A.75.75 0 0 1 8 3.25Z" />
                   </svg>
                 </span>
-                Extras
+                Mas
               </button>
 
               <div class="extra-fields" id="extra-fields" hidden>
                 <label class="field checkbox-field" title="Revisit" id="field-revisit">
                   <input id="revisit" name="revisit" type="checkbox" />
                   <span id="revisit-label">Revisit</span>
-                </label>
-
-                <label class="field" id="field-notes">
-                  <span class="field-label">Notas</span>
-                  <textarea
-                    id="notes"
-                    name="notes"
-                    rows="3"
-                    maxlength="600"
-                    placeholder="Notas"
-                  ></textarea>
                 </label>
               </div>
 
@@ -224,8 +217,26 @@
 
           <section class="panel library-panel">
             <div class="panel-heading library-heading">
-              <h2>Registros</h2>
-              <p class="panel-note" id="results-count">0 resultados</p>
+              <div class="library-summary">
+                <h2>Registros</h2>
+                <p class="panel-note" id="results-count">0 resultados</p>
+              </div>
+              <div class="view-switch" aria-label="Vista">
+                <button class="view-button active" type="button" data-layout="grid" title="Cuadricula" aria-label="Cuadricula">
+                  <span class="button-icon" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M2.75 2.75h4.5v4.5h-4.5zm6 0h4.5v4.5h-4.5zm-6 6h4.5v4.5h-4.5zm6 0h4.5v4.5h-4.5z" />
+                    </svg>
+                  </span>
+                </button>
+                <button class="view-button" type="button" data-layout="list" title="Lista" aria-label="Lista">
+                  <span class="button-icon" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M2.75 3.25a.75.75 0 0 1 .75-.75h9a.75.75 0 0 1 0 1.5h-9a.75.75 0 0 1-.75-.75Zm0 4a.75.75 0 0 1 .75-.75h9a.75.75 0 0 1 0 1.5h-9a.75.75 0 0 1-.75-.75Zm.75 3.25a.75.75 0 0 0 0 1.5h9a.75.75 0 0 0 0-1.5z" />
+                    </svg>
+                  </span>
+                </button>
+              </div>
             </div>
 
             <div class="type-tabs" id="type-tabs">
@@ -288,7 +299,6 @@
           </div>
           <h3 class="entry-title"></h3>
           <p class="entry-meta"></p>
-          <p class="entry-notes"></p>
           <div class="entry-actions">
             <button class="button ghost small share-button" type="button" title="Compartir" aria-label="Compartir" hidden>
               <span class="button-icon" aria-hidden="true">
@@ -297,6 +307,13 @@
                 </svg>
               </span>
               Compartir
+            </button>
+            <button class="button ghost small story-button" type="button" title="Story" aria-label="Story" hidden>
+              <span class="button-icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M4.5 1.75h7A1.75 1.75 0 0 1 13.25 3.5v9A1.75 1.75 0 0 1 11.5 14.25h-7A1.75 1.75 0 0 1 2.75 12.5v-9A1.75 1.75 0 0 1 4.5 1.75Zm0 1.5a.25.25 0 0 0-.25.25v9c0 .138.112.25.25.25h7a.25.25 0 0 0 .25-.25v-9a.25.25 0 0 0-.25-.25z" />
+                </svg>
+              </span>
             </button>
             <button class="button ghost small edit-button icon-only" type="button" title="Editar" aria-label="Editar">
               <span class="button-icon" aria-hidden="true">
