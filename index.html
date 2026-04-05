@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Media Logger Lite</title>
+    <meta
+      name="description"
+      content="Logger personal de peliculas, series, videojuegos, libros, comics y musica sin backend."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Media Logger Lite</p>
+          <h1>Tu Letterboxd, Backloggd y Serializd sin backend</h1>
+          <p class="hero-text">
+            Guarda peliculas, videojuegos, series, libros, comics y discos en
+            una sola app estatica. Todo se guarda en tu navegador y puedes
+            exportarlo a JSON cuando quieras.
+          </p>
+        </div>
+
+        <div class="hero-actions">
+          <button class="button primary icon-button" id="export-button" type="button">
+            <span class="button-icon" aria-hidden="true">
+              <svg viewBox="0 0 16 16" fill="currentColor">
+                <path d="M7.25 1.75a.75.75 0 0 1 1.5 0v6.19l1.72-1.72a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 1 1 1.06-1.06l1.72 1.72zM3.5 11.75a.75.75 0 0 1 .75.75v.25c0 .138.112.25.25.25h7a.25.25 0 0 0 .25-.25v-.25a.75.75 0 0 1 1.5 0v.25A1.75 1.75 0 0 1 11.5 14.5h-7A1.75 1.75 0 0 1 2.75 12.75v-.25a.75.75 0 0 1 .75-.75Z"/>
+              </svg>
+            </span>
+            Exportar JSON
+          </button>
+          <label class="button ghost file-button icon-button" for="import-file">
+            <span class="button-icon" aria-hidden="true">
+              <svg viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8.75 14.25a.75.75 0 0 1-1.5 0V8.06L5.53 9.78a.75.75 0 1 1-1.06-1.06l3-3a.75.75 0 0 1 1.06 0l3 3a.75.75 0 1 1-1.06 1.06L8.75 8.06zM3.5 2.75a.75.75 0 0 1 .75.75v.25c0 .138.112.25.25.25h7a.25.25 0 0 0 .25-.25V3.5a.75.75 0 0 1 1.5 0v.25A1.75 1.75 0 0 1 11.5 5.5h-7A1.75 1.75 0 0 1 2.75 3.75V3.5a.75.75 0 0 1 .75-.75Z"/>
+              </svg>
+            </span>
+            Importar JSON
+          </label>
+          <input id="import-file" type="file" accept=".json,application/json" hidden />
+          <button class="button danger icon-button" id="clear-button" type="button">
+            <span class="button-icon" aria-hidden="true">
+              <svg viewBox="0 0 16 16" fill="currentColor">
+                <path d="M6.5 1.75h3a.75.75 0 0 1 .75.75v.75h2.25a.75.75 0 0 1 0 1.5h-.55l-.63 8.16A1.75 1.75 0 0 1 9.57 14.5H6.43a1.75 1.75 0 0 1-1.75-1.59L4.05 4.75H3.5a.75.75 0 0 1 0-1.5h2.25V2.5a.75.75 0 0 1 .75-.75Zm2.25 1.5h-1.5v.5h1.5zm-2.56 1.5.58 7.94a.25.25 0 0 0 .25.23h3.96a.25.25 0 0 0 .25-.23l.58-7.94ZM6.75 6.5a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0v-3a.75.75 0 0 1 .75-.75Zm2.5 0a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0v-3a.75.75 0 0 1 .75-.75Z"/>
+              </svg>
+            </span>
+            Vaciar todo
+          </button>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="panel form-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Nuevo registro</p>
+              <h2>Añadir entrada</h2>
+            </div>
+            <p class="panel-note">Los datos se guardan automaticamente.</p>
+          </div>
+
+          <form id="entry-form" class="entry-form">
+            <input type="hidden" id="entry-id" />
+
+            <div class="field-grid">
+              <label class="field">
+                <span>Titulo</span>
+                <input id="title" name="title" type="text" required maxlength="120" />
+              </label>
+
+              <label class="field">
+                <span>Tipo</span>
+                <select id="type" name="type" required>
+                  <option value="movie">Pelicula</option>
+                  <option value="series">Serie</option>
+                  <option value="game">Videojuego</option>
+                  <option value="book">Libro</option>
+                  <option value="comic">Comic</option>
+                  <option value="album">Disco</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Estado</span>
+                <select id="status" name="status" required>
+                  <option value="completed">Completado</option>
+                  <option value="in-progress">En curso</option>
+                  <option value="planned">Pendiente</option>
+                  <option value="paused">Pausado</option>
+                  <option value="dropped">Abandonado</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Fecha</span>
+                <input id="date" name="date" type="date" required />
+              </label>
+
+              <label class="field">
+                <span>Puntuacion</span>
+                <select id="rating" name="rating">
+                  <option value="0">Sin nota</option>
+                  <option value="0.5">0.5</option>
+                  <option value="1">1</option>
+                  <option value="1.5">1.5</option>
+                  <option value="2">2</option>
+                  <option value="2.5">2.5</option>
+                  <option value="3">3</option>
+                  <option value="3.5">3.5</option>
+                  <option value="4">4</option>
+                  <option value="4.5">4.5</option>
+                  <option value="5">5</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Temporada</span>
+                <input
+                  id="season"
+                  name="season"
+                  type="number"
+                  min="1"
+                  max="999"
+                  placeholder="Solo para series"
+                />
+              </label>
+            </div>
+
+            <label class="field">
+              <span>Caratula</span>
+              <input
+                id="cover"
+                name="cover"
+                type="url"
+                placeholder="https://..."
+              />
+            </label>
+
+            <label class="field">
+              <span>Notas</span>
+              <textarea
+                id="notes"
+                name="notes"
+                rows="4"
+                maxlength="600"
+                placeholder="Comentario corto, mini review o contexto"
+              ></textarea>
+            </label>
+
+            <div class="form-actions">
+              <button class="button primary" type="submit" id="save-button">
+                Guardar entrada
+              </button>
+              <button class="button ghost" type="button" id="cancel-edit-button" hidden>
+                Cancelar edicion
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <section class="content-column">
+          <section class="stats-grid" id="stats-grid">
+            <article class="panel stat-card">
+              <span class="stat-icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M2.75 3.5A1.75 1.75 0 0 1 4.5 1.75h7A1.75 1.75 0 0 1 13.25 3.5v9A1.75 1.75 0 0 1 11.5 14.25h-7a1.75 1.75 0 0 1-1.75-1.75zm1.75-.25a.25.25 0 0 0-.25.25v9c0 .138.112.25.25.25h7a.25.25 0 0 0 .25-.25v-9a.25.25 0 0 0-.25-.25z"/>
+                </svg>
+              </span>
+              <p>Total</p>
+              <strong id="stat-total">0</strong>
+            </article>
+            <article class="panel stat-card">
+              <span class="stat-icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0L2.22 7.28a.75.75 0 1 1 1.06-1.06L7 9.94l5.72-5.72a.75.75 0 0 1 1.06 0Z"/>
+                </svg>
+              </span>
+              <p>Completados</p>
+              <strong id="stat-completed">0</strong>
+            </article>
+            <article class="panel stat-card">
+              <span class="stat-icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M8 1.75a6.25 6.25 0 1 0 6.25 6.25A.75.75 0 0 0 13.5 8h-5V3a.75.75 0 0 0-.5-.71A.74.74 0 0 0 8 1.75Zm-.75 2.37V8c0 .414.336.75.75.75h3.88A4.75 4.75 0 1 1 7.25 4.12Z"/>
+                </svg>
+              </span>
+              <p>En curso</p>
+              <strong id="stat-progress">0</strong>
+            </article>
+            <article class="panel stat-card">
+              <span class="stat-icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M8 .75a.75.75 0 0 1 .673.418l1.362 2.76 3.046.443a.75.75 0 0 1 .415 1.279l-2.204 2.148.52 3.033a.75.75 0 0 1-1.088.79L8 10.19l-2.724 1.432a.75.75 0 0 1-1.088-.79l.52-3.033L2.504 5.65a.75.75 0 0 1 .415-1.279l3.046-.443 1.362-2.76A.75.75 0 0 1 8 .75Z"/>
+                </svg>
+              </span>
+              <p>Media</p>
+              <strong id="stat-average">0.0</strong>
+            </article>
+          </section>
+
+          <section class="panel filters-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Biblioteca</p>
+                <h2>Filtrar y ordenar</h2>
+              </div>
+              <p class="panel-note" id="results-count">0 resultados</p>
+            </div>
+
+            <div class="filters-grid">
+              <label class="field">
+                <span>Buscar</span>
+                <input id="search" type="search" placeholder="Titulo o notas" />
+              </label>
+
+              <label class="field">
+                <span>Tipo</span>
+                <select id="filter-type">
+                  <option value="all">Todos</option>
+                  <option value="movie">Peliculas</option>
+                  <option value="series">Series</option>
+                  <option value="game">Videojuegos</option>
+                  <option value="book">Libros</option>
+                  <option value="comic">Comics</option>
+                  <option value="album">Discos</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Estado</span>
+                <select id="filter-status">
+                  <option value="all">Todos</option>
+                  <option value="completed">Completado</option>
+                  <option value="in-progress">En curso</option>
+                  <option value="planned">Pendiente</option>
+                  <option value="paused">Pausado</option>
+                  <option value="dropped">Abandonado</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Orden</span>
+                <select id="sort-by">
+                  <option value="date-desc">Fecha mas reciente</option>
+                  <option value="date-asc">Fecha mas antigua</option>
+                  <option value="rating-desc">Mayor puntuacion</option>
+                  <option value="rating-asc">Menor puntuacion</option>
+                  <option value="title-asc">Titulo A-Z</option>
+                  <option value="title-desc">Titulo Z-A</option>
+                </select>
+              </label>
+            </div>
+          </section>
+
+          <section class="entries-grid" id="entries-grid" aria-live="polite"></section>
+        </section>
+      </main>
+    </div>
+
+    <template id="entry-template">
+      <article class="panel entry-card">
+        <div class="cover-wrap">
+          <img class="entry-cover" alt="" />
+        </div>
+        <div class="entry-body">
+          <div class="entry-topline">
+            <span class="pill type-pill"></span>
+            <span class="pill status-pill"></span>
+          </div>
+          <h3 class="entry-title"></h3>
+          <p class="entry-meta"></p>
+          <p class="entry-rating"></p>
+          <p class="entry-notes"></p>
+          <div class="entry-actions">
+            <button class="button ghost small edit-button icon-button" type="button">
+              <span class="button-icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M11.013 1.427a1.75 1.75 0 0 1 2.474 2.474l-7.24 7.24a1.75 1.75 0 0 1-.788.45l-2.11.603a.75.75 0 0 1-.928-.928l.603-2.11a1.75 1.75 0 0 1 .45-.788zm1.414 1.06a.25.25 0 0 0-.354 0l-.72.72 1.414 1.414.72-.72a.25.25 0 0 0 0-.354zM11.28 5.68 9.866 4.266 4.535 9.597a.25.25 0 0 0-.064.112l-.269.941.941-.269a.25.25 0 0 0 .112-.064z"/>
+                </svg>
+              </span>
+              Editar
+            </button>
+            <button class="button danger small delete-button icon-button" type="button">
+              <span class="button-icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M6.5 1.75h3a.75.75 0 0 1 .75.75v.75h2.25a.75.75 0 0 1 0 1.5h-.55l-.63 8.16A1.75 1.75 0 0 1 9.57 14.5H6.43a1.75 1.75 0 0 1-1.75-1.59L4.05 4.75H3.5a.75.75 0 0 1 0-1.5h2.25V2.5a.75.75 0 0 1 .75-.75Zm2.25 1.5h-1.5v.5h1.5zm-2.56 1.5.58 7.94a.25.25 0 0 0 .25.23h3.96a.25.25 0 0 0 .25-.23l.58-7.94ZM6.75 6.5a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0v-3a.75.75 0 0 1 .75-.75Zm2.5 0a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0v-3a.75.75 0 0 1 .75-.75Z"/>
+                </svg>
+              </span>
+              Borrar
+            </button>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
