@@ -1,29 +1,29 @@
 # Media Logger Lite
 
-Aplicacion estatica para registrar peliculas, series, videojuegos, libros, comics y discos sin backend.
+## Como usarla
 
-## Stack
+1. Escribe un titulo.
+2. Elige tipo, estado y fecha.
+3. Añade la `Caratula URL`.
+4. Si es una serie, puedes indicar temporada.
+5. Si quieres, abre `Extras` para añadir notas o marcar `Revisit`.
+6. Pulsa `Guardar`.
 
-- HTML
-- CSS
-- JavaScript
-- `localStorage` para persistencia local
-- Importacion y exportacion en JSON
+## Biblioteca
 
-## Funciones
+- Usa las pestanas para cambiar de tipo.
+- Usa `Buscar` para encontrar entradas por titulo o notas.
+- Usa `Estado` y `Orden` para filtrar la lista.
+- Pulsa `Editar` para cambiar una entrada.
+- Pulsa `Borrar` para eliminarla.
+- Las entradas completadas permiten `Compartir`.
 
-- Crear, editar y borrar entradas
-- Campo de fecha, estado, estrellas, caratula y notas
-- Temporada para series
-- Filtros por tipo y estado
-- Orden por fecha, titulo y puntuacion
-- Exportar datos a JSON
-- Importar datos desde JSON
+## Guardado
 
-## Despliegue en Vercel
+- Los datos se guardan automaticamente en el navegador.
+- `Exportar` crea una copia en JSON.
+- `Importar` recupera una copia desde JSON.
 
-No necesita build. Puedes subir la carpeta tal cual como proyecto estatico.
+## Despliegue
 
-## Nota
-
-La persistencia principal vive en el navegador del usuario. Si quieres mover la biblioteca entre dispositivos, usa la exportacion/importacion JSON.
+- Se puede subir tal cual a Vercel como sitio estatico.
