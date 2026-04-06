@@ -780,8 +780,18 @@ h2 {
   overflow: hidden;
   padding: 0;
   background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.04), transparent 38%),
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.05), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 32%),
     rgba(16, 16, 18, 0.96);
+}
+
+.detail-modal-card::before {
+  content: "";
+  position: absolute;
+  inset: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 18px;
+  pointer-events: none;
 }
 
 .detail-close {
@@ -796,6 +806,7 @@ h2 {
 .detail-modal-cover-wrap {
   aspect-ratio: 0.82;
   background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .detail-modal-cover {
@@ -813,8 +824,8 @@ h2 {
 
 .detail-modal-body {
   display: grid;
-  gap: 12px;
-  padding: 20px 18px 22px;
+  gap: 14px;
+  padding: 20px 18px 24px;
   text-align: center;
   justify-items: center;
 }
@@ -833,6 +844,7 @@ h2 {
   letter-spacing: -0.04em;
   text-wrap: balance;
   max-width: 12ch;
+  text-transform: uppercase;
 }
 
 .detail-modal-rating {
@@ -841,11 +853,22 @@ h2 {
   letter-spacing: 0.2em;
 }
 
+.detail-facts {
+  width: min(100%, 300px);
+  display: grid;
+  gap: 8px;
+}
+
 .detail-modal-meta,
 .detail-modal-seasons {
   margin: 0;
   color: var(--muted);
+  width: 100%;
   max-width: 28ch;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.025);
 }
 
 .detail-modal-seasons {

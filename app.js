@@ -1,4 +1,4 @@
-const STORAGE_KEY = "media-logger-lite.entries";
+﻿const STORAGE_KEY = "media-logger-lite.entries";
 const BACKUP_COUNTER_KEY = "media-logger-lite.backup-counter";
 const BACKUP_INTERVAL = 12;
 const TYPE_LABELS = {
@@ -1039,3 +1039,4 @@ viewButtons.forEach((button) => {
 
 resetForm();
 render();
+
