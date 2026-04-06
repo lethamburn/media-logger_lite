@@ -593,6 +593,7 @@ h2 {
   overflow: hidden;
   background: rgba(17, 17, 19, 0.92);
   transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+  cursor: pointer;
 }
 
 .entry-card:hover {
@@ -620,23 +621,15 @@ h2 {
   opacity: 0.82;
 }
 
-.entry-overlay {
-  position: absolute;
-  inset: auto 10px 10px auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .entry-rating-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 24px;
-  padding: 4px 7px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0;
+  border: 0;
   border-radius: 999px;
-  background: rgba(9, 9, 11, 0.66);
+  background: transparent;
   font-size: 0.68rem;
   color: var(--text);
   letter-spacing: 0.12em;
@@ -644,6 +637,11 @@ h2 {
 
 .entry-rating-badge[hidden] {
   display: none;
+}
+
+.entry-rating-row {
+  margin: 0;
+  min-height: 18px;
 }
 
 .entry-body {
@@ -672,12 +670,17 @@ h2 {
 .status-pill[data-status="completed"],
 .status-pill[data-status="in-progress"],
 .status-pill[data-status="paused"],
-.status-pill[data-status="dropped"] {
+.status-pill[data-status="dropped"],
+#detail-modal-status[data-status="completed"],
+#detail-modal-status[data-status="in-progress"],
+#detail-modal-status[data-status="paused"],
+#detail-modal-status[data-status="dropped"] {
   color: var(--accent);
   border-color: var(--accent-soft);
 }
 
-.status-pill[data-status="planned"] {
+.status-pill[data-status="planned"],
+#detail-modal-status[data-status="planned"] {
   color: var(--muted);
 }
 
@@ -768,6 +771,80 @@ h2 {
 
 .modal-actions .button {
   flex: 1 1 0;
+}
+
+.detail-modal-card {
+  position: relative;
+  z-index: 1;
+  width: min(460px, 100%);
+  overflow: hidden;
+  padding: 0;
+}
+
+.detail-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  background: rgba(9, 9, 11, 0.42);
+  backdrop-filter: blur(10px);
+}
+
+.detail-modal-cover-wrap {
+  aspect-ratio: 4 / 5;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.detail-modal-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detail-modal-cover.is-placeholder {
+  object-fit: contain;
+  padding: 28px;
+  opacity: 0.85;
+}
+
+.detail-modal-body {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  text-align: center;
+  justify-items: center;
+}
+
+.detail-modal-topline {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.detail-modal-card h3 {
+  margin: 0;
+  font-size: 1.38rem;
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.detail-modal-rating {
+  margin: 0;
+  font-size: 0.86rem;
+  letter-spacing: 0.16em;
+}
+
+.detail-modal-meta,
+.detail-modal-seasons {
+  margin: 0;
+  color: var(--muted);
+  max-width: 32ch;
+}
+
+.detail-modal-seasons {
+  line-height: 1.5;
 }
 
 .toast {

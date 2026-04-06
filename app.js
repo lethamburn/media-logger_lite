@@ -70,6 +70,16 @@ const confirmModalTitle = document.querySelector("#confirm-modal-title");
 const confirmModalCopy = document.querySelector("#confirm-modal-copy");
 const confirmModalCancel = document.querySelector("#confirm-modal-cancel");
 const confirmModalConfirm = document.querySelector("#confirm-modal-confirm");
+const detailModal = document.querySelector("#detail-modal");
+const detailModalClose = document.querySelector("#detail-modal-close");
+const detailModalCover = document.querySelector("#detail-modal-cover");
+const detailModalType = document.querySelector("#detail-modal-type");
+const detailModalStatus = document.querySelector("#detail-modal-status");
+const detailModalRevisit = document.querySelector("#detail-modal-revisit");
+const detailModalTitle = document.querySelector("#detail-modal-title");
+const detailModalRating = document.querySelector("#detail-modal-rating");
+const detailModalMeta = document.querySelector("#detail-modal-meta");
+const detailModalSeasons = document.querySelector("#detail-modal-seasons");
 
 let toastTimer = null;
 let pendingConfirmAction = null;
@@ -286,6 +296,42 @@ function closeConfirmModal() {
   pendingConfirmAction = null;
 }
 
+function openDetailModal(entry) {
+  detailModalCover.src = entry.cover;
+  detailModalCover.alt = `Caratula de ${entry.title}`;
+  detailModalCover.classList.remove("is-placeholder");
+  detailModalCover.onerror = () => {
+    detailModalCover.src = getCoverFallback(entry.title);
+    detailModalCover.classList.add("is-placeholder");
+  };
+  detailModalType.textContent = TYPE_LABELS[entry.type];
+  detailModalStatus.textContent = STATUS_LABELS[entry.status];
+  detailModalStatus.dataset.status = entry.status;
+  detailModalRevisit.hidden = !entry.revisit;
+  detailModalRevisit.textContent = REVISIT_LABELS[entry.type] || "Revisit";
+  detailModalTitle.textContent = entry.title;
+  detailModalRating.textContent = formatStars(entry.rating);
+  detailModalRating.hidden = !detailModalRating.textContent;
+  detailModalMeta.textContent = formatDate(entry.date);
+
+  if (entry.type === "series" && entry.totalSeasons) {
+    const watched = entry.watchedSeasons.length > 0
+      ? entry.watchedSeasons.map((season) => `T${season}`).join(" · ")
+      : "Sin temporadas vistas";
+    detailModalSeasons.textContent = `${getSeriesWatchLabel(entry)} · ${watched}`;
+    detailModalSeasons.hidden = false;
+  } else {
+    detailModalSeasons.hidden = true;
+    detailModalSeasons.textContent = "";
+  }
+
+  detailModal.hidden = false;
+}
+
+function closeDetailModal() {
+  detailModal.hidden = true;
+}
+
 function getCoverFallback(title) {
   const label = encodeURIComponent((title || "Media").slice(0, 32));
   return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 600"><rect width="480" height="600" rx="36" fill="%23111113"/><rect x="24" y="24" width="432" height="552" rx="28" fill="%2317171b" stroke="%232a2a31"/><circle cx="240" cy="220" r="62" fill="%23222228"/><path d="M208 206h64v8h-64zm0 18h64v8h-64zm0 18h40v8h-40z" fill="%235a5a66"/><text x="240" y="432" text-anchor="middle" fill="%23d4d4d8" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="600">${label}</text></svg>`;
@@ -482,6 +528,7 @@ function renderEntries() {
     const deleteButton = clone.querySelector(".delete-button");
 
     article.dataset.id = entry.id;
+    article.tabIndex = 0;
     cover.src = entry.cover;
     cover.alt = `Caratula de ${entry.title}`;
     cover.loading = "lazy";
@@ -521,6 +568,19 @@ function renderEntries() {
     }
     editButton.addEventListener("click", () => startEditing(entry.id));
     deleteButton.addEventListener("click", () => deleteEntry(entry.id));
+    article.addEventListener("click", (event) => {
+      const target = event.target;
+      if (target instanceof HTMLElement && target.closest("button")) {
+        return;
+      }
+      openDetailModal(entry);
+    });
+    article.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openDetailModal(entry);
+      }
+    });
 
     fragment.appendChild(clone);
   });
@@ -930,6 +990,16 @@ confirmModal.addEventListener("click", (event) => {
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && !confirmModal.hidden) {
     closeConfirmModal();
+  }
+  if (event.key === "Escape" && !detailModal.hidden) {
+    closeDetailModal();
+  }
+});
+detailModalClose.addEventListener("click", closeDetailModal);
+detailModal.addEventListener("click", (event) => {
+  const target = event.target;
+  if (target instanceof HTMLElement && target.dataset.closeDetail === "true") {
+    closeDetailModal();
   }
 });
 

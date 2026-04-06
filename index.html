@@ -288,9 +288,6 @@
       <article class="panel entry-card">
         <div class="cover-wrap">
           <img class="entry-cover" alt="" />
-          <div class="entry-overlay">
-            <span class="entry-rating-badge"></span>
-          </div>
         </div>
         <div class="entry-body">
           <div class="entry-topline">
@@ -299,6 +296,9 @@
             <span class="pill revisit-pill" hidden>Revisit</span>
           </div>
           <h3 class="entry-title"></h3>
+          <p class="entry-rating-row">
+            <span class="entry-rating-badge"></span>
+          </p>
           <p class="entry-meta"></p>
           <div class="entry-actions">
             <button class="button ghost small toggle-status-button icon-only" type="button" title="Cambiar estado" aria-label="Cambiar estado">
@@ -344,6 +344,33 @@
         <div class="modal-actions">
           <button class="button ghost compact-button" type="button" id="confirm-modal-cancel">Cancelar</button>
           <button class="button danger compact-button" type="button" id="confirm-modal-confirm">Borrar</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal-shell" id="detail-modal" hidden>
+      <div class="modal-backdrop" data-close-detail="true"></div>
+      <section class="panel detail-modal-card" role="dialog" aria-modal="true" aria-labelledby="detail-modal-title">
+        <button class="button ghost icon-only detail-close" type="button" id="detail-modal-close" aria-label="Cerrar">
+          <span class="button-icon" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="currentColor">
+              <path d="M3.22 3.22a.75.75 0 0 1 1.06 0L8 6.94l3.72-3.72a.75.75 0 1 1 1.06 1.06L9.06 8l3.72 3.72a.75.75 0 1 1-1.06 1.06L8 9.06l-3.72 3.72a.75.75 0 0 1-1.06-1.06L6.94 8 3.22 4.28a.75.75 0 0 1 0-1.06Z" />
+            </svg>
+          </span>
+        </button>
+        <div class="detail-modal-cover-wrap">
+          <img id="detail-modal-cover" class="detail-modal-cover" alt="" />
+        </div>
+        <div class="detail-modal-body">
+          <div class="detail-modal-topline">
+            <span class="pill" id="detail-modal-type"></span>
+            <span class="pill" id="detail-modal-status"></span>
+            <span class="pill" id="detail-modal-revisit" hidden></span>
+          </div>
+          <h3 id="detail-modal-title"></h3>
+          <p class="detail-modal-rating" id="detail-modal-rating" hidden></p>
+          <p class="detail-modal-meta" id="detail-modal-meta"></p>
+          <p class="detail-modal-seasons" id="detail-modal-seasons" hidden></p>
         </div>
       </section>
     </div>
