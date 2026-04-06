@@ -217,6 +217,14 @@ h2 {
   background: #101013;
 }
 
+.field select option:checked,
+.field select option:hover,
+.field select option:focus {
+  color: var(--text);
+  background: #18181c;
+  box-shadow: 0 0 0 100px #18181c inset;
+}
+
 .field input::placeholder {
   color: #71717a;
 }
@@ -286,19 +294,22 @@ h2 {
 }
 
 .subtle-checkbox {
+  grid-template-columns: auto auto 1fr;
   justify-self: start;
-  width: auto;
+  width: 100%;
   min-width: 0;
-  padding: 8px 12px;
+  min-height: 38px;
+  padding: 8px 10px;
   border-color: rgba(255, 255, 255, 0.04);
   background: rgba(255, 255, 255, 0.02);
 }
 
 .checkbox-icon {
   display: inline-flex;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   color: var(--muted);
+  opacity: 0.72;
 }
 
 .checkbox-icon svg {
