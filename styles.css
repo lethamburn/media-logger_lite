@@ -706,11 +706,6 @@ h2 {
   background: rgba(255, 255, 255, 0.03);
 }
 
-.revisit-pill {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.04);
-}
-
 .entry-title {
   margin: 0;
   font-size: 1.03rem;
@@ -787,6 +782,96 @@ h2 {
 .empty-state p {
   margin-bottom: 0;
   color: var(--muted);
+}
+
+.monthly-panel {
+  padding: 18px;
+}
+
+.monthly-summary {
+  display: grid;
+  gap: 14px;
+}
+
+.monthly-empty {
+  margin: 0;
+  padding: 4px 0 0;
+  text-align: center;
+  color: var(--muted);
+}
+
+.monthly-empty p {
+  margin: 0;
+}
+
+.month-group {
+  display: grid;
+  gap: 10px;
+}
+
+.month-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.month-group-header h3 {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-transform: capitalize;
+}
+
+.month-group-header span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.month-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+  gap: 8px;
+}
+
+.month-item {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 0.72;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+  transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.month-item:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+}
+
+.month-item-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.month-item-cover.is-placeholder {
+  object-fit: contain;
+  padding: 8px;
+  opacity: 0.82;
 }
 
 .modal-shell[hidden] {
@@ -1206,6 +1291,27 @@ h2 {
 
   .entries-grid {
     gap: 12px;
+  }
+
+  .monthly-panel {
+    padding: 14px;
+  }
+
+  .monthly-summary {
+    gap: 12px;
+  }
+
+  .month-group {
+    gap: 8px;
+  }
+
+  .month-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+    gap: 7px;
+  }
+
+  .month-item {
+    border-radius: 10px;
   }
 
   .entry-body {

@@ -2,7 +2,7 @@
 const STORAGE_META_KEY = "media-logger-lite.meta";
 const BACKUP_COUNTER_KEY = "media-logger-lite.backup-counter";
 const BACKUP_INTERVAL = 12;
-const DATA_VERSION = 5;
+const DATA_VERSION = 6;
 const TYPE_LABELS = {
   movie: "Pelicula",
   series: "Serie",
@@ -18,15 +18,6 @@ const STATUS_LABELS = {
   planned: "Pendiente",
   paused: "Pausado",
   dropped: "Abandonado",
-};
-
-const REVISIT_LABELS = {
-  movie: "Rewatch",
-  series: "Rewatch",
-  game: "Replay",
-  book: "Reread",
-  comic: "Reread",
-  album: "Relisten",
 };
 
 const state = {
@@ -53,8 +44,6 @@ const totalSeasonsInput = document.querySelector("#total-seasons");
 const ratingInput = document.querySelector("#rating");
 const statusInput = document.querySelector("#status");
 const coverInput = document.querySelector("#cover");
-const revisitInput = document.querySelector("#revisit");
-const revisitLabel = document.querySelector("#revisit-label");
 const saveButton = document.querySelector("#save-button");
 const cancelEditButton = document.querySelector("#cancel-edit-button");
 const importInput = document.querySelector("#import-file");
@@ -62,12 +51,12 @@ const typeTabs = [...document.querySelectorAll(".tab-button")];
 const viewButtons = [...document.querySelectorAll(".view-button")];
 const seriesTotalField = document.querySelector("#field-series-total");
 const statusField = statusInput.parentElement;
-const revisitField = document.querySelector("#field-revisit");
 const coverPreview = document.querySelector("#cover-preview");
 const coverPreviewImage = document.querySelector("#cover-preview-image");
 const seriesProgress = document.querySelector("#series-progress");
 const seriesProgressSummary = document.querySelector("#series-progress-summary");
 const seasonChipGrid = document.querySelector("#season-chip-grid");
+const monthlySummary = document.querySelector("#monthly-summary");
 const toast = document.querySelector("#app-toast");
 const confirmModal = document.querySelector("#confirm-modal");
 const confirmModalTitle = document.querySelector("#confirm-modal-title");
@@ -78,7 +67,6 @@ const detailModal = document.querySelector("#detail-modal");
 const detailModalCover = document.querySelector("#detail-modal-cover");
 const detailModalType = document.querySelector("#detail-modal-type");
 const detailModalStatus = document.querySelector("#detail-modal-status");
-const detailModalRevisit = document.querySelector("#detail-modal-revisit");
 const detailModalTitle = document.querySelector("#detail-modal-title");
 const detailModalRating = document.querySelector("#detail-modal-rating");
 const detailModalMeta = document.querySelector("#detail-modal-meta");
@@ -118,23 +106,6 @@ function loadEntries() {
   }
 }
 
-function normalizeBoolean(value) {
-  if (typeof value === "boolean") {
-    return value;
-  }
-
-  if (typeof value === "string") {
-    const normalized = value.trim().toLowerCase();
-    return normalized === "true" || normalized === "1" || normalized === "yes" || normalized === "on";
-  }
-
-  if (typeof value === "number") {
-    return value === 1;
-  }
-
-  return false;
-}
-
 function normalizeImportedEntry(entry) {
   const type = entry.type in TYPE_LABELS ? entry.type : "movie";
   const totalSeasons =
@@ -142,7 +113,6 @@ function normalizeImportedEntry(entry) {
   const watchedSeasons =
     type === "series" ? normalizeSeasonList(entry.watchedSeasons, totalSeasons, entry) : [];
   const status = entry.status in STATUS_LABELS ? entry.status : "completed";
-  const revisit = normalizeBoolean(entry.revisit) && status === "completed";
 
   return {
     id: entry.id || crypto.randomUUID(),
@@ -154,15 +124,10 @@ function normalizeImportedEntry(entry) {
     season: null,
     totalSeasons,
     watchedSeasons,
-    revisit,
     cover: String(entry.cover || "").trim(),
     createdAt: entry.createdAt || new Date().toISOString(),
     updatedAt: entry.updatedAt || new Date().toISOString(),
   };
-}
-
-function isRevisitActive(entry) {
-  return entry.status === "completed" && entry.revisit === true;
 }
 
 function normalizeSeasonList(value, totalSeasons, legacyEntry = {}) {
@@ -318,7 +283,6 @@ function getFormSnapshot() {
     totalSeasons: totalSeasonsInput.value,
     watchedSeasons: [...state.seriesDraftWatchedSeasons],
     cover: coverInput.value.trim(),
-    revisit: revisitInput.checked,
   });
 }
 
@@ -387,8 +351,6 @@ function openDetailModal(entry) {
   detailModalType.textContent = TYPE_LABELS[entry.type];
   detailModalStatus.textContent = STATUS_LABELS[entry.status];
   detailModalStatus.dataset.status = entry.status;
-  detailModalRevisit.hidden = !isRevisitActive(entry);
-  detailModalRevisit.textContent = REVISIT_LABELS[entry.type] || "Revisit";
   detailModalTitle.textContent = entry.title;
   detailModalRating.textContent = formatStars(entry.rating);
   detailModalRating.hidden = !detailModalRating.textContent;
@@ -446,7 +408,6 @@ function updateSeriesFields() {
     seriesProgressSummary.textContent = "0/0";
   }
 
-  revisitLabel.textContent = REVISIT_LABELS[typeInput.value] || "Revisit";
   if (isSeries) {
     syncSeriesDraftBounds();
     renderSeasonChips();
@@ -459,16 +420,10 @@ function updateConditionalFields() {
       ? deriveSeriesStatus(totalSeasonsInput.value, state.seriesDraftWatchedSeasons)
       : statusInput.value;
   const showRating = status !== "planned";
-  const showRevisit = status === "completed";
 
   ratingInput.parentElement.hidden = !showRating;
   if (!showRating) {
     ratingInput.value = "0";
-  }
-
-  revisitField.hidden = !showRevisit;
-  if (!showRevisit) {
-    revisitInput.checked = false;
   }
 }
 
@@ -543,6 +498,94 @@ function renderStats() {
   document.querySelector("#stat-progress").textContent = String(stats.inProgress);
 }
 
+function getMonthlyGroups() {
+  const groups = new Map();
+
+  [...state.entries]
+    .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt))
+    .forEach((entry) => {
+      const key = entry.date.slice(0, 7);
+      if (!groups.has(key)) {
+        groups.set(key, []);
+      }
+      groups.get(key).push(entry);
+    });
+
+  return [...groups.entries()].sort((a, b) => b[0].localeCompare(a[0]));
+}
+
+function formatMonthLabel(value) {
+  const [year, month] = value.split("-");
+  return new Intl.DateTimeFormat("es-ES", {
+    month: "long",
+    year: "numeric",
+  }).format(new Date(`${year}-${month}-01T12:00:00`));
+}
+
+function renderMonthlySummary() {
+  monthlySummary.innerHTML = "";
+  const groups = getMonthlyGroups();
+
+  if (groups.length === 0) {
+    monthlySummary.innerHTML = `
+      <article class="monthly-empty">
+        <p>Sin registros todavia.</p>
+      </article>
+    `;
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+
+  groups.forEach(([monthKey, entries]) => {
+    const section = document.createElement("section");
+    section.className = "month-group";
+
+    const header = document.createElement("div");
+    header.className = "month-group-header";
+    header.innerHTML = `
+      <h3>${formatMonthLabel(monthKey)}</h3>
+      <span>${entries.length}</span>
+    `;
+
+    const gallery = document.createElement("div");
+    gallery.className = "month-gallery";
+
+    entries.forEach((entry) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "month-item";
+      button.title = entry.title;
+      button.setAttribute("aria-label", entry.title);
+
+      const image = document.createElement("img");
+      image.className = "month-item-cover";
+      image.src = entry.cover;
+      image.alt = `Caratula de ${entry.title}`;
+      image.loading = "lazy";
+      image.decoding = "async";
+      image.addEventListener(
+        "error",
+        () => {
+          image.src = getCoverFallback(entry.title);
+          image.classList.add("is-placeholder");
+        },
+        { once: true }
+      );
+
+      button.appendChild(image);
+      button.addEventListener("click", () => openDetailModal(entry));
+      gallery.appendChild(button);
+    });
+
+    section.appendChild(header);
+    section.appendChild(gallery);
+    fragment.appendChild(section);
+  });
+
+  monthlySummary.appendChild(fragment);
+}
+
 function renderTypeTabs() {
   typeTabs.forEach((button) => {
     button.classList.toggle("active", button.dataset.view === state.filters.typeView);
@@ -580,7 +623,6 @@ function renderEntries() {
     const ratingBadge = clone.querySelector(".entry-rating-badge");
     const typePill = clone.querySelector(".type-pill");
     const statusPill = clone.querySelector(".status-pill");
-    const revisitPill = clone.querySelector(".revisit-pill");
     const title = clone.querySelector(".entry-title");
     const meta = clone.querySelector(".entry-meta");
     const seasonMarks = clone.querySelector(".season-marks");
@@ -607,8 +649,6 @@ function renderEntries() {
     typePill.textContent = TYPE_LABELS[entry.type];
     statusPill.textContent = STATUS_LABELS[entry.status];
     statusPill.dataset.status = entry.status;
-    revisitPill.hidden = !isRevisitActive(entry);
-    revisitPill.textContent = REVISIT_LABELS[entry.type] || "Revisit";
     title.textContent = entry.title;
     meta.textContent = getEntryMeta(entry);
     renderSeasonMarks(seasonMarks, entry, "card");
@@ -653,6 +693,7 @@ function renderEntries() {
 
 function render() {
   renderStats();
+  renderMonthlySummary();
   renderTypeTabs();
   renderViewButtons();
   renderEntries();
@@ -728,7 +769,6 @@ function populateForm(entry) {
   document.querySelector("#rating").value = String(entry.rating);
   document.querySelector("#total-seasons").value = entry.totalSeasons || "";
   document.querySelector("#cover").value = entry.cover || "";
-  document.querySelector("#revisit").checked = entry.revisit;
   state.seriesDraftWatchedSeasons = [...(entry.watchedSeasons || [])];
   cancelEditButton.hidden = false;
   saveButton.textContent = "Actualizar";
@@ -760,7 +800,6 @@ function normalizeEntry(formData, idOverride = null) {
     season: null,
     totalSeasons,
     watchedSeasons,
-    revisit: derivedStatus === "completed" ? formData.get("revisit") === "on" : false,
     cover: String(formData.get("cover")).trim(),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -908,7 +947,6 @@ function duplicateEntry(entryId) {
     id: crypto.randomUUID(),
     date: today,
     status: "in-progress",
-    revisit: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -939,7 +977,6 @@ function toggleEntryStatus(entryId) {
             ...item,
             watchedSeasons,
             status: nextStatus,
-            revisit: nextStatus === "completed" ? item.revisit : false,
             updatedAt: new Date().toISOString(),
           }
         : item
@@ -964,7 +1001,6 @@ function toggleEntryStatus(entryId) {
           ...item,
           status: nextStatus,
           updatedAt: new Date().toISOString(),
-          revisit: nextStatus === "completed" ? item.revisit : false,
         }
       : item
   );
@@ -1045,10 +1081,6 @@ document.querySelector("#date").addEventListener("input", () => {
 ratingInput.addEventListener("change", updateDirtyState);
 coverInput.addEventListener("input", () => {
   updateCoverPreview();
-  updateDirtyState();
-});
-revisitInput.addEventListener("change", () => {
-  updateConditionalFields();
   updateDirtyState();
 });
 cancelEditButton.addEventListener("click", resetForm);

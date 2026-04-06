@@ -168,16 +168,6 @@
                 </label>
               </div>
 
-              <label class="field checkbox-field subtle-checkbox" title="Rewatch" id="field-revisit" hidden>
-                <input id="revisit" name="revisit" type="checkbox" />
-                <span class="checkbox-icon" aria-hidden="true">
-                  <svg viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M8 2a6 6 0 1 0 5.2 9H11a.75.75 0 0 1 0-1.5h3.5a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-1.46A7.5 7.5 0 1 1 8 0a7.47 7.47 0 0 1 5.3 2.2.75.75 0 1 1-1.06 1.06A5.98 5.98 0 0 0 8 2Z" />
-                  </svg>
-                </span>
-                <span id="revisit-label">Rewatch</span>
-              </label>
-
               <div class="form-actions">
                 <button class="button primary compact-button" type="submit" id="save-button" title="Guardar">
                   Guardar
@@ -219,6 +209,16 @@
               <p>En curso</p>
               <strong id="stat-progress">0</strong>
             </article>
+          </section>
+
+          <section class="panel monthly-panel">
+            <div class="panel-heading library-heading">
+              <div class="library-summary">
+                <h2>Meses</h2>
+                <p class="panel-note">Resumen mensual</p>
+              </div>
+            </div>
+            <div class="monthly-summary" id="monthly-summary" aria-live="polite"></div>
           </section>
 
           <section class="panel library-panel">
@@ -298,7 +298,6 @@
           <div class="entry-topline">
             <span class="pill type-pill"></span>
             <span class="pill status-pill"></span>
-            <span class="pill revisit-pill" hidden>Revisit</span>
           </div>
           <h3 class="entry-title"></h3>
           <p class="entry-rating-row">
@@ -364,7 +363,6 @@
           <div class="detail-modal-topline">
             <span class="pill" id="detail-modal-type"></span>
             <span class="pill" id="detail-modal-status"></span>
-            <span class="pill" id="detail-modal-revisit" hidden></span>
           </div>
           <h3 id="detail-modal-title"></h3>
           <p class="detail-modal-rating" id="detail-modal-rating" hidden></p>
