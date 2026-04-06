@@ -151,12 +151,12 @@ function setBackupCounter(value) {
   localStorage.setItem(BACKUP_COUNTER_KEY, String(value));
 }
 
-function registerMutation(reason = "Cambio guardado") {
+function registerMutation(reason = "Guardado") {
   const nextCount = getBackupCounter() + 1;
   if (nextCount >= BACKUP_INTERVAL) {
     exportEntries({ silent: true, reason: "backup" });
     setBackupCounter(0);
-    showToast("Backup descargado");
+    showToast("Copia de seguridad descargada");
     return;
   }
 
@@ -164,7 +164,7 @@ function registerMutation(reason = "Cambio guardado") {
   showToast(reason);
 }
 
-function openConfirmModal({ title, copy, confirmLabel = "Confirmar", confirmVariant = "danger", onConfirm }) {
+function openConfirmModal({ title, copy, confirmLabel = "Aceptar", confirmVariant = "danger", onConfirm }) {
   pendingConfirmAction = onConfirm;
   confirmModalTitle.textContent = title;
   confirmModalCopy.textContent = copy;
@@ -380,7 +380,7 @@ function renderEntries() {
     meta.textContent = getEntryMeta(entry);
     ratingBadge.textContent = formatStars(entry.rating);
     ratingBadge.hidden = !ratingBadge.textContent;
-    toggleStatusButton.title = entry.status === "completed" ? "Marcar en curso" : "Marcar completado";
+    toggleStatusButton.title = entry.status === "completed" ? "Pasar a en curso" : "Marcar como completado";
     toggleStatusButton.setAttribute("aria-label", toggleStatusButton.title);
 
     toggleStatusButton.addEventListener("click", () => toggleEntryStatus(entry.id));
@@ -515,7 +515,7 @@ function deleteEntry(entryId) {
   }
 
   openConfirmModal({
-    title: "Borrar entrada",
+    title: "Borrar registro",
     copy: `Se borrara "${entry.title}".`,
     confirmLabel: "Borrar",
     onConfirm: () => {
@@ -636,7 +636,7 @@ function duplicateEntry(entryId) {
   state.entries = [duplicate, ...state.entries];
   saveEntries();
   render();
-  registerMutation("Entrada duplicada");
+  registerMutation("Registro duplicado");
 }
 
 function toggleEntryStatus(entryId) {
@@ -664,7 +664,7 @@ function toggleEntryStatus(entryId) {
     }
   }
   render();
-  registerMutation(nextStatus === "completed" ? "Marcado como completado" : "Marcado en curso");
+  registerMutation(nextStatus === "completed" ? "Marcado como completado" : "Pasado a en curso");
 }
 
 form.addEventListener("submit", async (event) => {
