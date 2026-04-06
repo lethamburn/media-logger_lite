@@ -69,7 +69,18 @@ function loadEntries() {
     }
 
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.map(normalizeImportedEntry).filter((entry) => entry.cover) : [];
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    const normalizedEntries = parsed.map(normalizeImportedEntry).filter((entry) => entry.cover);
+
+    // Rewrite legacy values in-place so old string booleans don't keep resurfacing.
+    if (JSON.stringify(parsed) !== JSON.stringify(normalizedEntries)) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedEntries));
+    }
+
+    return normalizedEntries;
   } catch (error) {
     console.error("No se pudieron cargar las entradas:", error);
     return [];
