@@ -38,13 +38,14 @@ const state = {
   },
   editingId: null,
   coverValidationToken: 0,
+  seriesDraftWatchedSeasons: [],
 };
 
 const form = document.querySelector("#entry-form");
 const template = document.querySelector("#entry-template");
 const entriesGrid = document.querySelector("#entries-grid");
 const typeInput = document.querySelector("#type");
-const seasonInput = document.querySelector("#season");
+const totalSeasonsInput = document.querySelector("#total-seasons");
 const ratingInput = document.querySelector("#rating");
 const statusInput = document.querySelector("#status");
 const coverInput = document.querySelector("#cover");
@@ -55,10 +56,14 @@ const cancelEditButton = document.querySelector("#cancel-edit-button");
 const importInput = document.querySelector("#import-file");
 const typeTabs = [...document.querySelectorAll(".tab-button")];
 const viewButtons = [...document.querySelectorAll(".view-button")];
-const seasonField = document.querySelector("#field-season");
+const seriesTotalField = document.querySelector("#field-series-total");
+const statusField = statusInput.parentElement;
 const revisitField = document.querySelector("#field-revisit");
 const coverPreview = document.querySelector("#cover-preview");
 const coverPreviewImage = document.querySelector("#cover-preview-image");
+const seriesProgress = document.querySelector("#series-progress");
+const seriesProgressSummary = document.querySelector("#series-progress-summary");
+const seasonChipGrid = document.querySelector("#season-chip-grid");
 const toast = document.querySelector("#app-toast");
 const confirmModal = document.querySelector("#confirm-modal");
 const confirmModalTitle = document.querySelector("#confirm-modal-title");
@@ -114,6 +119,10 @@ function normalizeBoolean(value) {
 
 function normalizeImportedEntry(entry) {
   const type = entry.type in TYPE_LABELS ? entry.type : "movie";
+  const totalSeasons =
+    type === "series" ? Math.max(Number(entry.totalSeasons) || Number(entry.season) || 0, 0) || null : null;
+  const watchedSeasons =
+    type === "series" ? normalizeSeasonList(entry.watchedSeasons, totalSeasons, entry) : [];
 
   return {
     id: entry.id || crypto.randomUUID(),
@@ -122,12 +131,110 @@ function normalizeImportedEntry(entry) {
     status: entry.status in STATUS_LABELS ? entry.status : "completed",
     date: String(entry.date || new Date().toISOString().slice(0, 10)),
     rating: Number(entry.rating) || 0,
-    season: type === "series" ? Number(entry.season) || null : null,
+    season: null,
+    totalSeasons,
+    watchedSeasons,
     revisit: normalizeBoolean(entry.revisit),
     cover: String(entry.cover || "").trim(),
     createdAt: entry.createdAt || new Date().toISOString(),
     updatedAt: entry.updatedAt || new Date().toISOString(),
   };
+}
+
+function normalizeSeasonList(value, totalSeasons, legacyEntry = {}) {
+  const numericTotal = Math.max(Number(totalSeasons) || 0, 0);
+
+  if (Array.isArray(value)) {
+    return [...new Set(value.map((item) => Number(item) || 0))]
+      .filter((season) => season > 0 && (!numericTotal || season <= numericTotal))
+      .sort((a, b) => a - b);
+  }
+
+  const legacySeason = Number(legacyEntry.season) || 0;
+  if (!legacySeason) {
+    return [];
+  }
+
+  const fallbackMax = numericTotal || legacySeason;
+  return Array.from({ length: Math.min(legacySeason, fallbackMax) }, (_, index) => index + 1);
+}
+
+function getNormalizedSeriesTitle(title) {
+  return String(title || "").trim().toLowerCase();
+}
+
+function deriveSeriesStatus(totalSeasons, watchedSeasons) {
+  const total = Math.max(Number(totalSeasons) || 0, 0);
+  const watchedCount = watchedSeasons.length;
+
+  if (!total || watchedCount === 0) {
+    return "planned";
+  }
+
+  if (watchedCount >= total) {
+    return "completed";
+  }
+
+  return "in-progress";
+}
+
+function getSeriesWatchLabel(entry) {
+  if (entry.type !== "series" || !entry.totalSeasons) {
+    return "";
+  }
+
+  const watchedCount = entry.watchedSeasons.length;
+  return `${watchedCount}/${entry.totalSeasons} temporadas`;
+}
+
+function renderSeasonChips() {
+  const total = Math.max(Number(totalSeasonsInput.value) || 0, 0);
+  seasonChipGrid.innerHTML = "";
+
+  if (!total) {
+    seriesProgressSummary.textContent = "0/0";
+    return;
+  }
+
+  const watched = new Set(state.seriesDraftWatchedSeasons);
+  const fragment = document.createDocumentFragment();
+
+  for (let season = 1; season <= total; season += 1) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "season-chip";
+    button.dataset.season = String(season);
+    button.textContent = `T${season}`;
+    button.setAttribute("aria-pressed", String(watched.has(season)));
+    button.classList.toggle("active", watched.has(season));
+    button.addEventListener("click", () => {
+      toggleSeasonSelection(season);
+    });
+    fragment.appendChild(button);
+  }
+
+  seasonChipGrid.appendChild(fragment);
+  seriesProgressSummary.textContent = `${state.seriesDraftWatchedSeasons.length}/${total}`;
+}
+
+function toggleSeasonSelection(season) {
+  const current = new Set(state.seriesDraftWatchedSeasons);
+  if (current.has(season)) {
+    current.delete(season);
+  } else {
+    current.add(season);
+  }
+
+  state.seriesDraftWatchedSeasons = [...current].sort((a, b) => a - b);
+  renderSeasonChips();
+  updateConditionalFields();
+}
+
+function syncSeriesDraftBounds() {
+  const total = Math.max(Number(totalSeasonsInput.value) || 0, 0);
+  state.seriesDraftWatchedSeasons = state.seriesDraftWatchedSeasons
+    .filter((season) => season > 0 && season <= total)
+    .sort((a, b) => a - b);
 }
 
 function saveEntries() {
@@ -185,10 +292,12 @@ function getCoverFallback(title) {
 }
 
 function isFormReady() {
+  const needsSeriesSeasons = typeInput.value === "series";
   return Boolean(
     document.querySelector("#title").value.trim() &&
       document.querySelector("#date").value &&
-      coverInput.value.trim()
+      coverInput.value.trim() &&
+      (!needsSeriesSeasons || Number(totalSeasonsInput.value) > 0)
   );
 }
 
@@ -209,18 +318,30 @@ function getLibraryStats() {
 
 function updateSeriesFields() {
   const isSeries = typeInput.value === "series";
-  seasonInput.disabled = !isSeries;
-  seasonField.hidden = !isSeries;
+  totalSeasonsInput.disabled = !isSeries;
+  seriesTotalField.hidden = !isSeries;
+  seriesProgress.hidden = !isSeries;
+  statusField.hidden = isSeries;
 
   if (!isSeries) {
-    seasonInput.value = "";
+    totalSeasonsInput.value = "";
+    state.seriesDraftWatchedSeasons = [];
+    seasonChipGrid.innerHTML = "";
+    seriesProgressSummary.textContent = "0/0";
   }
 
   revisitLabel.textContent = REVISIT_LABELS[typeInput.value] || "Revisit";
+  if (isSeries) {
+    syncSeriesDraftBounds();
+    renderSeasonChips();
+  }
 }
 
 function updateConditionalFields() {
-  const status = statusInput.value;
+  const status =
+    typeInput.value === "series"
+      ? deriveSeriesStatus(totalSeasonsInput.value, state.seriesDraftWatchedSeasons)
+      : statusInput.value;
   const showRating = status !== "planned";
   const showRevisit = status === "completed";
 
@@ -261,8 +382,11 @@ function formatDate(value) {
 function getEntryMeta(entry) {
   const parts = [formatDate(entry.date)];
 
-  if (entry.type === "series" && entry.season) {
-    parts.push(`Temporada ${entry.season}`);
+  if (entry.type === "series" && entry.totalSeasons) {
+    parts.push(getSeriesWatchLabel(entry));
+    if (entry.watchedSeasons.length > 0 && entry.totalSeasons <= 8) {
+      parts.push(entry.watchedSeasons.map((season) => `T${season}`).join(", "));
+    }
   }
 
   return parts.join(" - ");
@@ -380,11 +504,21 @@ function renderEntries() {
     meta.textContent = getEntryMeta(entry);
     ratingBadge.textContent = formatStars(entry.rating);
     ratingBadge.hidden = !ratingBadge.textContent;
-    toggleStatusButton.title = entry.status === "completed" ? "Pasar a en curso" : "Marcar como completado";
+    toggleStatusButton.title =
+      entry.type === "series"
+        ? entry.status === "completed"
+          ? "Reiniciar temporadas"
+          : "Marcar todas vistas"
+        : entry.status === "completed"
+          ? "Pasar a en curso"
+          : "Marcar como completado";
     toggleStatusButton.setAttribute("aria-label", toggleStatusButton.title);
+    duplicateButton.hidden = entry.type === "series";
 
     toggleStatusButton.addEventListener("click", () => toggleEntryStatus(entry.id));
-    duplicateButton.addEventListener("click", () => duplicateEntry(entry.id));
+    if (!duplicateButton.hidden) {
+      duplicateButton.addEventListener("click", () => duplicateEntry(entry.id));
+    }
     editButton.addEventListener("click", () => startEditing(entry.id));
     deleteButton.addEventListener("click", () => deleteEntry(entry.id));
 
@@ -454,6 +588,7 @@ function resetForm() {
   cancelEditButton.hidden = true;
   saveButton.textContent = "Guardar";
   state.editingId = null;
+  state.seriesDraftWatchedSeasons = [];
   resetCoverPreview();
   updateSeriesFields();
   updateConditionalFields();
@@ -467,9 +602,10 @@ function populateForm(entry) {
   document.querySelector("#status").value = entry.status;
   document.querySelector("#date").value = entry.date;
   document.querySelector("#rating").value = String(entry.rating);
-  document.querySelector("#season").value = entry.season || "";
+  document.querySelector("#total-seasons").value = entry.totalSeasons || "";
   document.querySelector("#cover").value = entry.cover || "";
   document.querySelector("#revisit").checked = entry.revisit;
+  state.seriesDraftWatchedSeasons = [...(entry.watchedSeasons || [])];
   cancelEditButton.hidden = false;
   saveButton.textContent = "Actualizar";
   updateSeriesFields();
@@ -481,20 +617,39 @@ function populateForm(entry) {
 function normalizeEntry(formData, idOverride = null) {
   const type = String(formData.get("type"));
   const isSeries = type === "series";
+  const totalSeasons = isSeries ? Math.max(Number(formData.get("total-seasons")) || 0, 0) || null : null;
+  const watchedSeasons = isSeries
+    ? state.seriesDraftWatchedSeasons.filter((season) => totalSeasons && season <= totalSeasons)
+    : [];
+  const derivedStatus = isSeries
+    ? deriveSeriesStatus(totalSeasons, watchedSeasons)
+    : String(formData.get("status"));
 
   return {
     id: idOverride || crypto.randomUUID(),
     title: String(formData.get("title")).trim(),
     type,
-    status: String(formData.get("status")),
+    status: derivedStatus,
     date: String(formData.get("date")),
     rating: Number(formData.get("rating")) || 0,
-    season: isSeries ? Number(formData.get("season")) || null : null,
-    revisit: formData.get("revisit") === "on",
+    season: null,
+    totalSeasons,
+    watchedSeasons,
+    revisit: derivedStatus === "completed" ? formData.get("revisit") === "on" : false,
     cover: String(formData.get("cover")).trim(),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
+}
+
+function findSeriesDuplicate(title, excludeId = null) {
+  const normalizedTitle = getNormalizedSeriesTitle(title);
+  return state.entries.find(
+    (entry) =>
+      entry.type === "series" &&
+      entry.id !== excludeId &&
+      getNormalizedSeriesTitle(entry.title) === normalizedTitle
+  );
 }
 
 function startEditing(entryId) {
@@ -645,6 +800,38 @@ function toggleEntryStatus(entryId) {
     return;
   }
 
+  if (entry.type === "series") {
+    const totalSeasons = Math.max(Number(entry.totalSeasons) || 0, 0);
+    const watchedSeasons =
+      entry.status === "completed"
+        ? []
+        : Array.from({ length: totalSeasons }, (_, index) => index + 1);
+    const nextStatus = deriveSeriesStatus(totalSeasons, watchedSeasons);
+
+    state.entries = state.entries.map((item) =>
+      item.id === entryId
+        ? {
+            ...item,
+            watchedSeasons,
+            status: nextStatus,
+            revisit: nextStatus === "completed" ? item.revisit : false,
+            updatedAt: new Date().toISOString(),
+          }
+        : item
+    );
+
+    saveEntries();
+    if (state.editingId === entryId) {
+      const updatedEntry = state.entries.find((item) => item.id === entryId);
+      if (updatedEntry) {
+        populateForm(updatedEntry);
+      }
+    }
+    render();
+    registerMutation(nextStatus === "completed" ? "Serie marcada como completa" : "Serie reiniciada");
+    return;
+  }
+
   const nextStatus = entry.status === "completed" ? "in-progress" : "completed";
   state.entries = state.entries.map((item) =>
     item.id === entryId
@@ -670,11 +857,20 @@ function toggleEntryStatus(entryId) {
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const formData = new FormData(form);
-  const existingEntry = state.entries.find((entry) => entry.id === state.editingId);
-  const normalizedEntry = normalizeEntry(formData, state.editingId);
+  const duplicateSeries = typeInput.value === "series"
+    ? findSeriesDuplicate(formData.get("title"), state.editingId)
+    : null;
+  const targetId = state.editingId || duplicateSeries?.id || null;
+  const existingEntry = targetId ? state.entries.find((entry) => entry.id === targetId) : null;
+  const normalizedEntry = normalizeEntry(formData, targetId);
 
   if (!normalizedEntry.title || !normalizedEntry.date || !normalizedEntry.cover) {
     window.alert("Titulo, fecha y caratula son obligatorios.");
+    return;
+  }
+
+  if (normalizedEntry.type === "series" && !normalizedEntry.totalSeasons) {
+    window.alert("Indica cuantas temporadas tiene la serie.");
     return;
   }
 
@@ -687,12 +883,12 @@ form.addEventListener("submit", async (event) => {
   if (existingEntry) {
     normalizedEntry.createdAt = existingEntry.createdAt;
     state.entries = state.entries.map((entry) =>
-      entry.id === state.editingId ? normalizedEntry : entry
+      entry.id === targetId ? normalizedEntry : entry
     );
     saveEntries();
     resetForm();
     render();
-    registerMutation("Entrada actualizada");
+    registerMutation(duplicateSeries ? "Serie actualizada" : "Entrada actualizada");
   } else {
     state.entries = [normalizedEntry, ...state.entries];
     saveEntries();
@@ -705,6 +901,11 @@ form.addEventListener("submit", async (event) => {
 typeInput.addEventListener("change", updateSeriesFields);
 typeInput.addEventListener("change", updateConditionalFields);
 statusInput.addEventListener("change", updateConditionalFields);
+totalSeasonsInput.addEventListener("input", () => {
+  syncSeriesDraftBounds();
+  renderSeasonChips();
+  updateConditionalFields();
+});
 document.querySelector("#title").addEventListener("input", updateSaveButtonState);
 document.querySelector("#date").addEventListener("input", updateSaveButtonState);
 coverInput.addEventListener("input", updateCoverPreview);

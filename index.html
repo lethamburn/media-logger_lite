@@ -137,10 +137,18 @@
                   </select>
                 </label>
 
-                <label class="field context-series" id="field-season">
-                  <span class="field-label">Temporada</span>
-                  <input id="season" name="season" type="number" min="1" max="999" placeholder="T" title="Temporada" />
+                <label class="field context-series" id="field-series-total">
+                  <span class="field-label">Temporadas</span>
+                  <input id="total-seasons" name="total-seasons" type="number" min="1" max="99" placeholder="Total" title="Temporadas totales" />
                 </label>
+              </div>
+
+              <div class="context-series series-progress" id="series-progress" hidden>
+                <div class="series-progress-head">
+                  <span class="field-label">Vistas</span>
+                  <span class="series-progress-summary" id="series-progress-summary">0/0</span>
+                </div>
+                <div class="season-chip-grid" id="season-chip-grid"></div>
               </div>
 
               <div class="form-section">

@@ -196,6 +196,7 @@ h2 {
 }
 
 .context-series[hidden],
+.series-progress[hidden],
 .cover-preview[hidden] {
   display: none;
 }
@@ -291,6 +292,54 @@ h2 {
   width: 100%;
   aspect-ratio: 4 / 5;
   object-fit: cover;
+}
+
+.series-progress {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.series-progress-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.series-progress-summary {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.season-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.season-chip {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+
+.season-chip:hover {
+  transform: translateY(-1px);
+}
+
+.season-chip.active {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: transparent;
+  color: #09090b;
 }
 
 .checkbox-field {
