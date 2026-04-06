@@ -1,6 +1,8 @@
 ﻿const STORAGE_KEY = "media-logger-lite.entries";
+const STORAGE_META_KEY = "media-logger-lite.meta";
 const BACKUP_COUNTER_KEY = "media-logger-lite.backup-counter";
 const BACKUP_INTERVAL = 12;
+const DATA_VERSION = 5;
 const TYPE_LABELS = {
   movie: "Pelicula",
   series: "Serie",
@@ -39,6 +41,8 @@ const state = {
   editingId: null,
   coverValidationToken: 0,
   seriesDraftWatchedSeasons: [],
+  formSnapshot: "",
+  isDirty: false,
 };
 
 const form = document.querySelector("#entry-form");
@@ -87,20 +91,25 @@ let pendingConfirmAction = null;
 function loadEntries() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
+    const rawMeta = localStorage.getItem(STORAGE_META_KEY);
     if (!raw) {
+      persistStorageMeta();
       return [];
     }
 
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) {
+      persistStorageMeta();
       return [];
     }
 
     const normalizedEntries = parsed.map(normalizeImportedEntry).filter((entry) => entry.cover);
+    const parsedMeta = rawMeta ? JSON.parse(rawMeta) : null;
+    const needsMetaRefresh = !parsedMeta || Number(parsedMeta.version) !== DATA_VERSION;
 
     // Rewrite legacy values in-place so old string booleans don't keep resurfacing.
-    if (JSON.stringify(parsed) !== JSON.stringify(normalizedEntries)) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedEntries));
+    if (JSON.stringify(parsed) !== JSON.stringify(normalizedEntries) || needsMetaRefresh) {
+      persistEntries(normalizedEntries);
     }
 
     return normalizedEntries;
@@ -270,6 +279,7 @@ function toggleSeasonSelection(season) {
   state.seriesDraftWatchedSeasons = [...current].sort((a, b) => a - b);
   renderSeasonChips();
   updateConditionalFields();
+  updateDirtyState();
 }
 
 function syncSeriesDraftBounds() {
@@ -279,8 +289,47 @@ function syncSeriesDraftBounds() {
     .sort((a, b) => a - b);
 }
 
+function persistStorageMeta() {
+  localStorage.setItem(
+    STORAGE_META_KEY,
+    JSON.stringify({
+      version: DATA_VERSION,
+      updatedAt: new Date().toISOString(),
+    })
+  );
+}
+
+function persistEntries(entries) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  persistStorageMeta();
+}
+
 function saveEntries() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.entries));
+  persistEntries(state.entries);
+}
+
+function getFormSnapshot() {
+  return JSON.stringify({
+    entryId: document.querySelector("#entry-id").value,
+    title: document.querySelector("#title").value.trim(),
+    type: typeInput.value,
+    status: statusInput.value,
+    date: document.querySelector("#date").value,
+    rating: ratingInput.value,
+    totalSeasons: totalSeasonsInput.value,
+    watchedSeasons: [...state.seriesDraftWatchedSeasons],
+    cover: coverInput.value.trim(),
+    revisit: revisitInput.checked,
+  });
+}
+
+function markFormClean() {
+  state.formSnapshot = getFormSnapshot();
+  state.isDirty = false;
+}
+
+function updateDirtyState() {
+  state.isDirty = getFormSnapshot() !== state.formSnapshot;
 }
 
 function showToast(message) {
@@ -668,6 +717,7 @@ function resetForm() {
   updateSeriesFields();
   updateConditionalFields();
   updateSaveButtonState();
+  markFormClean();
 }
 
 function populateForm(entry) {
@@ -687,6 +737,7 @@ function populateForm(entry) {
   updateConditionalFields();
   updateCoverPreview();
   updateSaveButtonState();
+  markFormClean();
 }
 
 function normalizeEntry(formData, idOverride = null) {
@@ -764,7 +815,7 @@ function exportEntries(options = {}) {
   const { silent = false, reason = "manual" } = options;
   const payload = {
     exportedAt: new Date().toISOString(),
-    version: 4,
+    version: DATA_VERSION,
     entries: state.entries,
   };
 
@@ -975,16 +1026,32 @@ form.addEventListener("submit", async (event) => {
 
 typeInput.addEventListener("change", updateSeriesFields);
 typeInput.addEventListener("change", updateConditionalFields);
+typeInput.addEventListener("change", updateDirtyState);
 statusInput.addEventListener("change", updateConditionalFields);
+statusInput.addEventListener("change", updateDirtyState);
 totalSeasonsInput.addEventListener("input", () => {
   syncSeriesDraftBounds();
   renderSeasonChips();
   updateConditionalFields();
+  updateDirtyState();
 });
-document.querySelector("#title").addEventListener("input", updateSaveButtonState);
-document.querySelector("#date").addEventListener("input", updateSaveButtonState);
-coverInput.addEventListener("input", updateCoverPreview);
-revisitInput.addEventListener("change", updateConditionalFields);
+document.querySelector("#title").addEventListener("input", () => {
+  updateSaveButtonState();
+  updateDirtyState();
+});
+document.querySelector("#date").addEventListener("input", () => {
+  updateSaveButtonState();
+  updateDirtyState();
+});
+ratingInput.addEventListener("change", updateDirtyState);
+coverInput.addEventListener("input", () => {
+  updateCoverPreview();
+  updateDirtyState();
+});
+revisitInput.addEventListener("change", () => {
+  updateConditionalFields();
+  updateDirtyState();
+});
 cancelEditButton.addEventListener("click", resetForm);
 
 document.querySelector("#export-button").addEventListener("click", exportEntries);
@@ -1009,6 +1076,15 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && !detailModal.hidden) {
     closeDetailModal();
   }
+});
+
+window.addEventListener("beforeunload", (event) => {
+  if (!state.isDirty) {
+    return;
+  }
+
+  event.preventDefault();
+  event.returnValue = "";
 });
 detailModalClose.addEventListener("click", closeDetailModal);
 detailModal.addEventListener("click", (event) => {
@@ -1051,6 +1127,14 @@ viewButtons.forEach((button) => {
     renderEntries();
   });
 });
+
+if ("serviceWorker" in navigator && window.isSecureContext) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch((error) => {
+      console.error("No se pudo registrar el service worker:", error);
+    });
+  });
+}
 
 resetForm();
 render();
