@@ -217,7 +217,7 @@ function renderSeasonMarks(container, entry, variant = "card") {
   for (let season = 1; season <= entry.totalSeasons; season += 1) {
     const mark = document.createElement("span");
     mark.className = `season-mark season-mark-${variant}`;
-    mark.textContent = String(season);
+    mark.textContent = `S${season}`;
     mark.setAttribute("aria-hidden", "true");
     if (watched.has(season)) {
       mark.classList.add("active");
