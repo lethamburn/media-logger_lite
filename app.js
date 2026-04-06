@@ -203,6 +203,32 @@ function getSeriesWatchLabel(entry) {
   return `${watchedCount}/${entry.totalSeasons} temporadas`;
 }
 
+function renderSeasonMarks(container, entry, variant = "card") {
+  container.innerHTML = "";
+
+  if (entry.type !== "series" || !entry.totalSeasons) {
+    container.hidden = true;
+    return;
+  }
+
+  const watched = new Set(entry.watchedSeasons || []);
+  const fragment = document.createDocumentFragment();
+
+  for (let season = 1; season <= entry.totalSeasons; season += 1) {
+    const mark = document.createElement("span");
+    mark.className = `season-mark season-mark-${variant}`;
+    mark.textContent = String(season);
+    mark.setAttribute("aria-hidden", "true");
+    if (watched.has(season)) {
+      mark.classList.add("active");
+    }
+    fragment.appendChild(mark);
+  }
+
+  container.appendChild(fragment);
+  container.hidden = false;
+}
+
 function renderSeasonChips() {
   const total = Math.max(Number(totalSeasonsInput.value) || 0, 0);
   seasonChipGrid.innerHTML = "";
@@ -319,17 +345,7 @@ function openDetailModal(entry) {
   detailModalRating.textContent = formatStars(entry.rating);
   detailModalRating.hidden = !detailModalRating.textContent;
   detailModalMeta.textContent = formatDate(entry.date);
-
-  if (entry.type === "series" && entry.totalSeasons) {
-    const watched = entry.watchedSeasons.length > 0
-      ? entry.watchedSeasons.map((season) => `T${season}`).join(" · ")
-      : "Sin temporadas vistas";
-    detailModalSeasons.textContent = `${getSeriesWatchLabel(entry)} · ${watched}`;
-    detailModalSeasons.hidden = false;
-  } else {
-    detailModalSeasons.hidden = true;
-    detailModalSeasons.textContent = "";
-  }
+  renderSeasonMarks(detailModalSeasons, entry, "detail");
 
   detailModal.hidden = false;
 }
@@ -432,16 +448,7 @@ function formatDate(value) {
 }
 
 function getEntryMeta(entry) {
-  const parts = [formatDate(entry.date)];
-
-  if (entry.type === "series" && entry.totalSeasons) {
-    parts.push(getSeriesWatchLabel(entry));
-    if (entry.watchedSeasons.length > 0 && entry.totalSeasons <= 8) {
-      parts.push(entry.watchedSeasons.map((season) => `T${season}`).join(", "));
-    }
-  }
-
-  return parts.join(" - ");
+  return formatDate(entry.date);
 }
 
 function compareEntries(a, b) {
@@ -528,6 +535,7 @@ function renderEntries() {
     const revisitPill = clone.querySelector(".revisit-pill");
     const title = clone.querySelector(".entry-title");
     const meta = clone.querySelector(".entry-meta");
+    const seasonMarks = clone.querySelector(".season-marks");
     const toggleStatusButton = clone.querySelector(".toggle-status-button");
     const duplicateButton = clone.querySelector(".duplicate-button");
     const editButton = clone.querySelector(".edit-button");
@@ -555,6 +563,7 @@ function renderEntries() {
     revisitPill.textContent = REVISIT_LABELS[entry.type] || "Revisit";
     title.textContent = entry.title;
     meta.textContent = getEntryMeta(entry);
+    renderSeasonMarks(seasonMarks, entry, "card");
     ratingBadge.textContent = formatStars(entry.rating);
     ratingBadge.hidden = !ratingBadge.textContent;
     toggleStatusButton.title =
