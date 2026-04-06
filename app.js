@@ -1,6 +1,4 @@
 const STORAGE_KEY = "media-logger-lite.entries";
-const EXTRAS_OPEN_KEY = "media-logger-lite.extras-open";
-
 const TYPE_LABELS = {
   movie: "Pelicula",
   series: "Serie",
@@ -57,8 +55,6 @@ const typeTabs = [...document.querySelectorAll(".tab-button")];
 const viewButtons = [...document.querySelectorAll(".view-button")];
 const seasonField = document.querySelector("#field-season");
 const revisitField = document.querySelector("#field-revisit");
-const extraFields = document.querySelector("#extra-fields");
-const toggleExtrasButton = document.querySelector("#toggle-extras");
 const coverPreview = document.querySelector("#cover-preview");
 const coverPreviewImage = document.querySelector("#cover-preview-image");
 const toast = document.querySelector("#app-toast");
@@ -100,16 +96,6 @@ function normalizeImportedEntry(entry) {
 
 function saveEntries() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.entries));
-}
-
-function getExtrasPreference() {
-  return localStorage.getItem(EXTRAS_OPEN_KEY) === "true";
-}
-
-function setExtrasOpen(open) {
-  extraFields.hidden = !open;
-  toggleExtrasButton.setAttribute("aria-expanded", String(open));
-  localStorage.setItem(EXTRAS_OPEN_KEY, String(open));
 }
 
 function showToast(message) {
@@ -156,10 +142,6 @@ function updateSeriesFields() {
   revisitLabel.textContent = REVISIT_LABELS[typeInput.value] || "Revisit";
 }
 
-function shouldShowExtras() {
-  return getExtrasPreference() || revisitInput.checked || state.editingId !== null;
-}
-
 function updateConditionalFields() {
   const status = statusInput.value;
   const showRating = status !== "planned";
@@ -174,14 +156,12 @@ function updateConditionalFields() {
   if (!showRevisit) {
     revisitInput.checked = false;
   }
-
-  setExtrasOpen(shouldShowExtras());
 }
 
 function formatStars(value) {
   const numericValue = Number(value);
   if (!numericValue) {
-    return "Sin nota";
+    return "";
   }
 
   const fullStars = Math.floor(numericValue);
@@ -310,6 +290,7 @@ function renderEntries() {
     title.textContent = entry.title;
     meta.textContent = getEntryMeta(entry);
     ratingBadge.textContent = formatStars(entry.rating);
+    ratingBadge.hidden = !ratingBadge.textContent;
 
     editButton.addEventListener("click", () => startEditing(entry.id));
     deleteButton.addEventListener("click", () => deleteEntry(entry.id));
@@ -573,10 +554,6 @@ document.querySelector("#date").addEventListener("input", updateSaveButtonState)
 coverInput.addEventListener("input", updateCoverPreview);
 revisitInput.addEventListener("change", updateConditionalFields);
 cancelEditButton.addEventListener("click", resetForm);
-toggleExtrasButton.addEventListener("click", () => {
-  const open = extraFields.hidden;
-  setExtrasOpen(open);
-});
 
 document.querySelector("#export-button").addEventListener("click", exportEntries);
 document.querySelector("#clear-button").addEventListener("click", clearAllEntries);

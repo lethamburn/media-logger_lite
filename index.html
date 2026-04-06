@@ -142,27 +142,15 @@
                 </label>
               </div>
 
-              <button
-                class="button ghost compact-button extras-toggle"
-                type="button"
-                id="toggle-extras"
-                aria-expanded="false"
-                title="Mostrar extras"
-              >
-                <span class="button-icon" aria-hidden="true">
+              <label class="field checkbox-field subtle-checkbox" title="Rewatch" id="field-revisit" hidden>
+                <input id="revisit" name="revisit" type="checkbox" />
+                <span class="checkbox-icon" aria-hidden="true">
                   <svg viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M8 3.25a.75.75 0 0 1 .75.75v3.25H12a.75.75 0 0 1 0 1.5H8.75V12a.75.75 0 0 1-1.5 0V8.75H4a.75.75 0 0 1 0-1.5h3.25V4A.75.75 0 0 1 8 3.25Z" />
+                    <path d="M8 2a6 6 0 1 0 5.2 9H11a.75.75 0 0 1 0-1.5h3.5a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-1.46A7.5 7.5 0 1 1 8 0a7.47 7.47 0 0 1 5.3 2.2.75.75 0 1 1-1.06 1.06A5.98 5.98 0 0 0 8 2Z" />
                   </svg>
                 </span>
-                Mas
-              </button>
-
-              <div class="extra-fields" id="extra-fields" hidden>
-                <label class="field checkbox-field" title="Revisit" id="field-revisit">
-                  <input id="revisit" name="revisit" type="checkbox" />
-                  <span id="revisit-label">Revisit</span>
-                </label>
-              </div>
+                <span id="revisit-label">Rewatch</span>
+              </label>
 
               <div class="form-actions">
                 <button class="button primary compact-button" type="submit" id="save-button" title="Guardar">

@@ -152,8 +152,7 @@ h2 {
 
 .entry-form,
 .field-grid,
-.filters-grid,
-.extra-fields {
+.filters-grid {
   display: grid;
 }
 
@@ -176,7 +175,6 @@ h2 {
 }
 
 .context-series[hidden],
-.extra-fields[hidden],
 .cover-preview[hidden] {
   display: none;
 }
@@ -211,6 +209,12 @@ h2 {
     box-shadow 140ms ease,
     background 140ms ease,
     transform 140ms ease;
+}
+
+.field select,
+.field select option {
+  color: var(--text);
+  background: #101013;
 }
 
 .field input::placeholder {
@@ -260,19 +264,6 @@ h2 {
   object-fit: cover;
 }
 
-.extras-toggle {
-  width: 100%;
-  min-height: 40px;
-}
-
-.extra-fields {
-  gap: 10px;
-  padding: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.015);
-}
-
 .checkbox-field {
   grid-template-columns: auto 1fr;
   align-items: center;
@@ -292,6 +283,27 @@ h2 {
 
 .checkbox-field span {
   text-align: left;
+}
+
+.subtle-checkbox {
+  justify-self: start;
+  width: auto;
+  min-width: 0;
+  padding: 8px 12px;
+  border-color: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.checkbox-icon {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  color: var(--muted);
+}
+
+.checkbox-icon svg {
+  width: 100%;
+  height: 100%;
 }
 
 .form-actions,
@@ -547,6 +559,10 @@ h2 {
   font-size: 0.68rem;
   color: var(--text);
   letter-spacing: 0.12em;
+}
+
+.entry-rating-badge[hidden] {
+  display: none;
 }
 
 .entry-body {
