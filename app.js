@@ -133,22 +133,28 @@ function normalizeImportedEntry(entry) {
     type === "series" ? Math.max(Number(entry.totalSeasons) || Number(entry.season) || 0, 0) || null : null;
   const watchedSeasons =
     type === "series" ? normalizeSeasonList(entry.watchedSeasons, totalSeasons, entry) : [];
+  const status = entry.status in STATUS_LABELS ? entry.status : "completed";
+  const revisit = normalizeBoolean(entry.revisit) && status === "completed";
 
   return {
     id: entry.id || crypto.randomUUID(),
     title: String(entry.title || "").trim(),
     type,
-    status: entry.status in STATUS_LABELS ? entry.status : "completed",
+    status,
     date: String(entry.date || new Date().toISOString().slice(0, 10)),
     rating: Number(entry.rating) || 0,
     season: null,
     totalSeasons,
     watchedSeasons,
-    revisit: normalizeBoolean(entry.revisit),
+    revisit,
     cover: String(entry.cover || "").trim(),
     createdAt: entry.createdAt || new Date().toISOString(),
     updatedAt: entry.updatedAt || new Date().toISOString(),
   };
+}
+
+function isRevisitActive(entry) {
+  return entry.status === "completed" && entry.revisit === true;
 }
 
 function normalizeSeasonList(value, totalSeasons, legacyEntry = {}) {
@@ -307,7 +313,7 @@ function openDetailModal(entry) {
   detailModalType.textContent = TYPE_LABELS[entry.type];
   detailModalStatus.textContent = STATUS_LABELS[entry.status];
   detailModalStatus.dataset.status = entry.status;
-  detailModalRevisit.hidden = !entry.revisit;
+  detailModalRevisit.hidden = !isRevisitActive(entry);
   detailModalRevisit.textContent = REVISIT_LABELS[entry.type] || "Revisit";
   detailModalTitle.textContent = entry.title;
   detailModalRating.textContent = formatStars(entry.rating);
@@ -545,7 +551,7 @@ function renderEntries() {
     typePill.textContent = TYPE_LABELS[entry.type];
     statusPill.textContent = STATUS_LABELS[entry.status];
     statusPill.dataset.status = entry.status;
-    revisitPill.hidden = !entry.revisit;
+    revisitPill.hidden = !isRevisitActive(entry);
     revisitPill.textContent = REVISIT_LABELS[entry.type] || "Revisit";
     title.textContent = entry.title;
     meta.textContent = getEntryMeta(entry);
@@ -843,7 +849,7 @@ function duplicateEntry(entryId) {
     id: crypto.randomUUID(),
     date: today,
     status: "in-progress",
-    revisit: entry.status === "completed" ? true : entry.revisit,
+    revisit: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
