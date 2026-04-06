@@ -1,4 +1,6 @@
 const STORAGE_KEY = "media-logger-lite.entries";
+const BACKUP_COUNTER_KEY = "media-logger-lite.backup-counter";
+const BACKUP_INTERVAL = 12;
 const TYPE_LABELS = {
   movie: "Pelicula",
   series: "Serie",
@@ -58,8 +60,14 @@ const revisitField = document.querySelector("#field-revisit");
 const coverPreview = document.querySelector("#cover-preview");
 const coverPreviewImage = document.querySelector("#cover-preview-image");
 const toast = document.querySelector("#app-toast");
+const confirmModal = document.querySelector("#confirm-modal");
+const confirmModalTitle = document.querySelector("#confirm-modal-title");
+const confirmModalCopy = document.querySelector("#confirm-modal-copy");
+const confirmModalCancel = document.querySelector("#confirm-modal-cancel");
+const confirmModalConfirm = document.querySelector("#confirm-modal-confirm");
 
 let toastTimer = null;
+let pendingConfirmAction = null;
 
 function loadEntries() {
   try {
@@ -133,6 +141,47 @@ function showToast(message) {
   toastTimer = setTimeout(() => {
     toast.hidden = true;
   }, 2200);
+}
+
+function getBackupCounter() {
+  return Number(localStorage.getItem(BACKUP_COUNTER_KEY)) || 0;
+}
+
+function setBackupCounter(value) {
+  localStorage.setItem(BACKUP_COUNTER_KEY, String(value));
+}
+
+function registerMutation(reason = "Cambio guardado") {
+  const nextCount = getBackupCounter() + 1;
+  if (nextCount >= BACKUP_INTERVAL) {
+    exportEntries({ silent: true, reason: "backup" });
+    setBackupCounter(0);
+    showToast("Backup descargado");
+    return;
+  }
+
+  setBackupCounter(nextCount);
+  showToast(reason);
+}
+
+function openConfirmModal({ title, copy, confirmLabel = "Confirmar", confirmVariant = "danger", onConfirm }) {
+  pendingConfirmAction = onConfirm;
+  confirmModalTitle.textContent = title;
+  confirmModalCopy.textContent = copy;
+  confirmModalConfirm.textContent = confirmLabel;
+  confirmModalConfirm.classList.toggle("danger", confirmVariant === "danger");
+  confirmModalConfirm.classList.toggle("primary", confirmVariant !== "danger");
+  confirmModal.hidden = false;
+}
+
+function closeConfirmModal() {
+  confirmModal.hidden = true;
+  pendingConfirmAction = null;
+}
+
+function getCoverFallback(title) {
+  const label = encodeURIComponent((title || "Media").slice(0, 32));
+  return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 600"><rect width="480" height="600" rx="36" fill="%23111113"/><rect x="24" y="24" width="432" height="552" rx="28" fill="%2317171b" stroke="%232a2a31"/><circle cx="240" cy="220" r="62" fill="%23222228"/><path d="M208 206h64v8h-64zm0 18h64v8h-64zm0 18h40v8h-40z" fill="%235a5a66"/><text x="240" y="432" text-anchor="middle" fill="%23d4d4d8" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="600">${label}</text></svg>`;
 }
 
 function isFormReady() {
@@ -303,12 +352,24 @@ function renderEntries() {
     const revisitPill = clone.querySelector(".revisit-pill");
     const title = clone.querySelector(".entry-title");
     const meta = clone.querySelector(".entry-meta");
+    const toggleStatusButton = clone.querySelector(".toggle-status-button");
+    const duplicateButton = clone.querySelector(".duplicate-button");
     const editButton = clone.querySelector(".edit-button");
     const deleteButton = clone.querySelector(".delete-button");
 
     article.dataset.id = entry.id;
     cover.src = entry.cover;
     cover.alt = `Caratula de ${entry.title}`;
+    cover.loading = "lazy";
+    cover.decoding = "async";
+    cover.addEventListener(
+      "error",
+      () => {
+        cover.src = getCoverFallback(entry.title);
+        cover.classList.add("is-placeholder");
+      },
+      { once: true }
+    );
 
     typePill.textContent = TYPE_LABELS[entry.type];
     statusPill.textContent = STATUS_LABELS[entry.status];
@@ -319,7 +380,11 @@ function renderEntries() {
     meta.textContent = getEntryMeta(entry);
     ratingBadge.textContent = formatStars(entry.rating);
     ratingBadge.hidden = !ratingBadge.textContent;
+    toggleStatusButton.title = entry.status === "completed" ? "Marcar en curso" : "Marcar completado";
+    toggleStatusButton.setAttribute("aria-label", toggleStatusButton.title);
 
+    toggleStatusButton.addEventListener("click", () => toggleEntryStatus(entry.id));
+    duplicateButton.addEventListener("click", () => duplicateEntry(entry.id));
     editButton.addEventListener("click", () => startEditing(entry.id));
     deleteButton.addEventListener("click", () => deleteEntry(entry.id));
 
@@ -449,21 +514,24 @@ function deleteEntry(entryId) {
     return;
   }
 
-  const confirmed = window.confirm(`Se borrara "${entry.title}".`);
-  if (!confirmed) {
-    return;
-  }
-
-  state.entries = state.entries.filter((item) => item.id !== entryId);
-  saveEntries();
-  if (state.editingId === entryId) {
-    resetForm();
-  }
-  render();
-  showToast("Entrada borrada");
+  openConfirmModal({
+    title: "Borrar entrada",
+    copy: `Se borrara "${entry.title}".`,
+    confirmLabel: "Borrar",
+    onConfirm: () => {
+      state.entries = state.entries.filter((item) => item.id !== entryId);
+      saveEntries();
+      if (state.editingId === entryId) {
+        resetForm();
+      }
+      render();
+      registerMutation("Entrada borrada");
+    },
+  });
 }
 
-function exportEntries() {
+function exportEntries(options = {}) {
+  const { silent = false, reason = "manual" } = options;
   const payload = {
     exportedAt: new Date().toISOString(),
     version: 4,
@@ -478,10 +546,14 @@ function exportEntries() {
   const dateLabel = new Date().toISOString().slice(0, 10);
 
   anchor.href = url;
-  anchor.download = `media-logger-${dateLabel}.json`;
+  anchor.download = reason === "backup"
+    ? `media-logger-backup-${dateLabel}.json`
+    : `media-logger-${dateLabel}.json`;
   anchor.click();
   URL.revokeObjectURL(url);
-  showToast("JSON exportado");
+  if (!silent) {
+    showToast("JSON exportado");
+  }
 }
 
 function importEntries(file) {
@@ -507,6 +579,7 @@ function importEntries(file) {
       saveEntries();
       resetForm();
       render();
+      setBackupCounter(0);
 
       if (discardedEntries > 0) {
         showToast(`Importadas ${importedEntries.length}. Omitidas ${discardedEntries} sin caratula`);
@@ -529,16 +602,69 @@ function clearAllEntries() {
     return;
   }
 
-  const confirmed = window.confirm("Se borraran todas las entradas guardadas.");
-  if (!confirmed) {
+  openConfirmModal({
+    title: "Vaciar biblioteca",
+    copy: "Se borraran todas las entradas guardadas.",
+    confirmLabel: "Vaciar",
+    onConfirm: () => {
+      state.entries = [];
+      saveEntries();
+      resetForm();
+      render();
+      registerMutation("Biblioteca vaciada");
+    },
+  });
+}
+
+function duplicateEntry(entryId) {
+  const entry = state.entries.find((item) => item.id === entryId);
+  if (!entry) {
     return;
   }
 
-  state.entries = [];
+  const today = new Date().toISOString().slice(0, 10);
+  const duplicate = {
+    ...entry,
+    id: crypto.randomUUID(),
+    date: today,
+    status: "in-progress",
+    revisit: entry.status === "completed" ? true : entry.revisit,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  state.entries = [duplicate, ...state.entries];
   saveEntries();
-  resetForm();
   render();
-  showToast("Biblioteca vaciada");
+  registerMutation("Entrada duplicada");
+}
+
+function toggleEntryStatus(entryId) {
+  const entry = state.entries.find((item) => item.id === entryId);
+  if (!entry) {
+    return;
+  }
+
+  const nextStatus = entry.status === "completed" ? "in-progress" : "completed";
+  state.entries = state.entries.map((item) =>
+    item.id === entryId
+      ? {
+          ...item,
+          status: nextStatus,
+          updatedAt: new Date().toISOString(),
+          revisit: nextStatus === "completed" ? item.revisit : false,
+        }
+      : item
+  );
+  saveEntries();
+  if (state.editingId === entryId) {
+    const updatedEntry = state.entries.find((item) => item.id === entryId);
+    if (updatedEntry) {
+      populateForm(updatedEntry);
+    }
+  }
+  render();
+  registerMutation(nextStatus === "completed" ? "Marcado como completado" : "Marcado en curso");
 }
 
 form.addEventListener("submit", async (event) => {
@@ -563,15 +689,17 @@ form.addEventListener("submit", async (event) => {
     state.entries = state.entries.map((entry) =>
       entry.id === state.editingId ? normalizedEntry : entry
     );
-    showToast("Entrada actualizada");
+    saveEntries();
+    resetForm();
+    render();
+    registerMutation("Entrada actualizada");
   } else {
     state.entries = [normalizedEntry, ...state.entries];
-    showToast("Entrada guardada");
+    saveEntries();
+    resetForm();
+    render();
+    registerMutation("Entrada guardada");
   }
-
-  saveEntries();
-  resetForm();
-  render();
 });
 
 typeInput.addEventListener("change", updateSeriesFields);
@@ -585,6 +713,24 @@ cancelEditButton.addEventListener("click", resetForm);
 
 document.querySelector("#export-button").addEventListener("click", exportEntries);
 document.querySelector("#clear-button").addEventListener("click", clearAllEntries);
+confirmModalCancel.addEventListener("click", closeConfirmModal);
+confirmModalConfirm.addEventListener("click", () => {
+  if (pendingConfirmAction) {
+    pendingConfirmAction();
+  }
+  closeConfirmModal();
+});
+confirmModal.addEventListener("click", (event) => {
+  const target = event.target;
+  if (target instanceof HTMLElement && target.dataset.closeModal === "true") {
+    closeConfirmModal();
+  }
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !confirmModal.hidden) {
+    closeConfirmModal();
+  }
+});
 
 importInput.addEventListener("change", (event) => {
   importEntries(event.target.files[0]);
