@@ -1,29 +1,47 @@
 # Media Logger Lite
 
-## Como usarla
+## Uso
 
-1. Escribe un titulo.
-2. Elige tipo, estado y fecha.
+### Añadir un registro
+
+1. Escribe el `Titulo`.
+2. Elige `Tipo`, `Estado` y `Fecha`.
 3. Añade la `Caratula URL`.
-4. Si es una serie, puedes indicar temporada.
-5. Si quieres, abre `Extras` para añadir notas o marcar `Revisit`.
+4. Si es una serie, indica `Temporadas` y marca las vistas.
+5. Si quieres, añade una `Nota`.
 6. Pulsa `Guardar`.
 
-## Biblioteca
+### Editar o borrar
 
-- Usa las pestanas para cambiar de tipo.
-- Usa `Buscar` para encontrar entradas por titulo o notas.
-- Usa `Estado` y `Orden` para filtrar la lista.
-- Pulsa `Editar` para cambiar una entrada.
-- Pulsa `Borrar` para eliminarla.
-- Las entradas completadas permiten `Compartir`.
+- Pulsa una card para abrir el detalle.
+- Usa los iconos de cada card para `Editar`, `Duplicar`, cambiar estado o `Borrar`.
+- En series, el cambio rápido de estado marca todas las temporadas como vistas o las reinicia.
 
-## Guardado
+### Biblioteca
 
-- Los datos se guardan automaticamente en el navegador.
-- `Exportar` crea una copia en JSON.
-- `Importar` recupera una copia desde JSON.
+- Usa las pestañas superiores para cambiar de tipo.
+- Usa `Buscar`, `Estado` y `Orden` para filtrar.
+- Cambia entre vista de `Cuadricula` y `Lista`.
+- En `Meses` verás un resumen mensual compacto. Pulsa cualquier carátula para abrir su detalle.
 
-## Despliegue
+### Guardado
 
-- Se puede subir tal cual a Vercel como sitio estatico.
+- Los datos se guardan automáticamente en el navegador.
+- `Exportar` descarga una copia en JSON.
+- `Importar` recupera una copia desde un JSON.
+- La app descarga una copia automática cada cierto número de cambios.
+
+### Series
+
+- Cada serie usa una sola ficha.
+- El progreso se controla por temporadas.
+- En las cards y en el detalle se muestran chips como `S1`, `S2`, `S3`.
+
+### Detalle
+
+- Pulsa una card para abrir el detalle completo.
+- El modal se cierra pulsando fuera o con `Escape`.
+
+### Instalación en móvil o escritorio
+
+- Si el navegador lo permite, puedes instalar la app desde el menú del navegador.
