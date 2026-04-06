@@ -1000,19 +1000,46 @@ h2 {
 @media (max-width: 820px) {
   .page-shell {
     width: min(100% - 16px, 1240px);
-    padding-top: 10px;
+    padding-top: 8px;
+    padding-bottom: 20px;
   }
 
   .github-corner {
-    width: 54px;
-    height: 54px;
+    width: 50px;
+    height: 50px;
   }
 
   .hero,
   .form-panel,
   .library-panel {
-    padding: 14px;
+    padding: 13px;
     border-radius: 16px;
+  }
+
+  .hero {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .hero-actions {
+    gap: 5px;
+  }
+
+  .button.icon-only,
+  .view-button {
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+  }
+
+  .button-icon,
+  .stat-icon {
+    width: 12px;
+    height: 12px;
+  }
+
+  h1 {
+    font-size: 1rem;
   }
 
   .hero-copy,
@@ -1032,14 +1059,63 @@ h2 {
     grid-template-columns: 1fr;
   }
 
+  .stats-grid {
+    gap: 7px;
+  }
+
+  .stat-card {
+    padding: 10px 8px;
+  }
+
+  .stat-card p {
+    margin-bottom: 3px;
+    font-size: 0.62rem;
+  }
+
   .field-span-2 {
     grid-column: auto;
+  }
+
+  .entry-form,
+  .form-section {
+    gap: 10px;
+  }
+
+  .field {
+    gap: 6px;
+  }
+
+  .field input,
+  .field select,
+  .button,
+  .compact-button {
+    min-height: 42px;
+  }
+
+  .field-label {
+    font-size: 0.64rem;
+  }
+
+  .series-progress {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .season-chip-grid {
+    gap: 7px;
+  }
+
+  .season-chip {
+    min-height: 30px;
+    padding: 0 11px;
+    font-size: 0.74rem;
   }
 
   .type-tabs {
     flex-wrap: nowrap;
     justify-content: flex-start;
     overflow-x: auto;
+    gap: 6px;
     padding-bottom: 2px;
     scrollbar-width: none;
   }
@@ -1050,10 +1126,54 @@ h2 {
 
   .tab-button {
     white-space: nowrap;
+    min-height: 30px;
+    padding: 6px 11px;
+    font-size: 0.74rem;
   }
 
   .view-switch {
     align-self: center;
+  }
+
+  .filters-grid .field input,
+  .filters-grid .field select {
+    min-height: 38px;
+    padding-block: 9px;
+  }
+
+  .entries-grid {
+    gap: 12px;
+  }
+
+  .entry-body {
+    gap: 7px;
+    padding: 12px 12px 11px;
+  }
+
+  .entry-title {
+    font-size: 0.98rem;
+  }
+
+  .entry-meta {
+    font-size: 0.72rem;
+  }
+
+  .pill {
+    min-height: 24px;
+    padding: 4px 8px;
+    font-size: 0.63rem;
+  }
+
+  .entry-rating-badge {
+    font-size: 0.64rem;
+    letter-spacing: 0.1em;
+  }
+
+  .season-mark {
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    font-size: 0.64rem;
   }
 
   .entries-grid[data-layout="list"] .entry-card {
@@ -1075,5 +1195,58 @@ h2 {
   .entries-grid[data-layout="list"] .entry-topline,
   .entries-grid[data-layout="list"] .entry-actions {
     justify-content: center;
+  }
+
+  .detail-modal-card {
+    width: min(100%, 400px);
+  }
+
+  .detail-modal-cover-wrap {
+    aspect-ratio: 0.86;
+  }
+
+  .detail-modal-body {
+    gap: 10px;
+    padding: 16px 14px 18px;
+  }
+
+  .detail-modal-card h3 {
+    font-size: 1.28rem;
+    max-width: 14ch;
+  }
+
+  .detail-modal-rating {
+    font-size: 0.8rem;
+  }
+
+  .detail-modal-meta {
+    font-size: 0.78rem;
+  }
+
+  .detail-modal-seasons {
+    gap: 5px;
+    max-width: 100%;
+  }
+
+  .season-mark-detail {
+    min-width: 24px;
+    height: 24px;
+    padding: 0 7px;
+    font-size: 0.66rem;
+  }
+
+  .modal-card {
+    width: min(100%, 360px);
+    padding: 16px;
+  }
+
+  .modal-actions {
+    gap: 8px;
+  }
+
+  .toast {
+    bottom: 14px;
+    padding: 9px 12px;
+    font-size: 0.78rem;
   }
 }
