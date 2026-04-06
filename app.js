@@ -75,7 +75,6 @@ const confirmModalCopy = document.querySelector("#confirm-modal-copy");
 const confirmModalCancel = document.querySelector("#confirm-modal-cancel");
 const confirmModalConfirm = document.querySelector("#confirm-modal-confirm");
 const detailModal = document.querySelector("#detail-modal");
-const detailModalClose = document.querySelector("#detail-modal-close");
 const detailModalCover = document.querySelector("#detail-modal-cover");
 const detailModalType = document.querySelector("#detail-modal-type");
 const detailModalStatus = document.querySelector("#detail-modal-status");
@@ -1086,7 +1085,6 @@ window.addEventListener("beforeunload", (event) => {
   event.preventDefault();
   event.returnValue = "";
 });
-detailModalClose.addEventListener("click", closeDetailModal);
 detailModal.addEventListener("click", (event) => {
   const target = event.target;
   if (target instanceof HTMLElement && target.dataset.closeDetail === "true") {
