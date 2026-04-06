@@ -712,6 +712,12 @@ h2 {
     border-radius: 16px;
   }
 
+  .hero-copy,
+  .hero-actions {
+    width: 100%;
+    justify-content: center;
+  }
+
   .library-heading {
     flex-direction: column;
     align-items: stretch;
@@ -725,6 +731,26 @@ h2 {
 
   .field-span-2 {
     grid-column: auto;
+  }
+
+  .type-tabs {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .type-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-button {
+    white-space: nowrap;
+  }
+
+  .view-switch {
+    align-self: center;
   }
 
   .entries-grid[data-layout="list"] .entry-card {
