@@ -76,6 +76,23 @@ function loadEntries() {
   }
 }
 
+function normalizeBoolean(value) {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    return normalized === "true" || normalized === "1" || normalized === "yes" || normalized === "on";
+  }
+
+  if (typeof value === "number") {
+    return value === 1;
+  }
+
+  return false;
+}
+
 function normalizeImportedEntry(entry) {
   const type = entry.type in TYPE_LABELS ? entry.type : "movie";
 
@@ -87,7 +104,7 @@ function normalizeImportedEntry(entry) {
     date: String(entry.date || new Date().toISOString().slice(0, 10)),
     rating: Number(entry.rating) || 0,
     season: type === "series" ? Number(entry.season) || null : null,
-    revisit: Boolean(entry.revisit),
+    revisit: normalizeBoolean(entry.revisit),
     cover: String(entry.cover || "").trim(),
     createdAt: entry.createdAt || new Date().toISOString(),
     updatedAt: entry.updatedAt || new Date().toISOString(),
