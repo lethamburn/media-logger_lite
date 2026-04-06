@@ -136,17 +136,11 @@ function updateSaveButtonState() {
 function getLibraryStats() {
   const completed = state.entries.filter((entry) => entry.status === "completed").length;
   const inProgress = state.entries.filter((entry) => entry.status === "in-progress").length;
-  const ratedEntries = state.entries.filter((entry) => Number(entry.rating) > 0);
-  const average =
-    ratedEntries.length > 0
-      ? ratedEntries.reduce((sum, entry) => sum + Number(entry.rating), 0) / ratedEntries.length
-      : 0;
 
   return {
     total: state.entries.length,
     completed,
     inProgress,
-    average: average.toFixed(1),
   };
 }
 
@@ -259,7 +253,6 @@ function renderStats() {
   document.querySelector("#stat-total").textContent = String(stats.total);
   document.querySelector("#stat-completed").textContent = String(stats.completed);
   document.querySelector("#stat-progress").textContent = String(stats.inProgress);
-  document.querySelector("#stat-average").textContent = stats.average;
 }
 
 function renderTypeTabs() {
@@ -302,8 +295,6 @@ function renderEntries() {
     const revisitPill = clone.querySelector(".revisit-pill");
     const title = clone.querySelector(".entry-title");
     const meta = clone.querySelector(".entry-meta");
-    const shareButton = clone.querySelector(".share-button");
-    const storyButton = clone.querySelector(".story-button");
     const editButton = clone.querySelector(".edit-button");
     const deleteButton = clone.querySelector(".delete-button");
 
@@ -319,11 +310,7 @@ function renderEntries() {
     title.textContent = entry.title;
     meta.textContent = getEntryMeta(entry);
     ratingBadge.textContent = formatStars(entry.rating);
-    shareButton.hidden = entry.status !== "completed";
-    storyButton.hidden = entry.status !== "completed";
 
-    shareButton.addEventListener("click", () => shareEntryCard(entry, "square"));
-    storyButton.addEventListener("click", () => shareEntryCard(entry, "story"));
     editButton.addEventListener("click", () => startEditing(entry.id));
     deleteButton.addEventListener("click", () => deleteEntry(entry.id));
 
@@ -543,195 +530,6 @@ function clearAllEntries() {
   resetForm();
   render();
   showToast("Biblioteca vaciada");
-}
-
-function loadImageForCanvas(src) {
-  return new Promise((resolve) => {
-    const image = new Image();
-    image.crossOrigin = "anonymous";
-    image.onload = () => resolve(image);
-    image.onerror = () => resolve(null);
-    image.src = src;
-  });
-}
-
-function roundRectPath(context, x, y, width, height, radius) {
-  const r = Math.min(radius, width / 2, height / 2);
-  context.beginPath();
-  context.moveTo(x + r, y);
-  context.arcTo(x + width, y, x + width, y + height, r);
-  context.arcTo(x + width, y + height, x, y + height, r);
-  context.arcTo(x, y + height, x, y, r);
-  context.arcTo(x, y, x + width, y, r);
-  context.closePath();
-}
-
-function drawWrappedText(context, text, x, y, maxWidth, lineHeight, maxLines) {
-  const words = text.split(/\s+/).filter(Boolean);
-  const lines = [];
-  let currentLine = "";
-
-  words.forEach((word) => {
-    const testLine = currentLine ? `${currentLine} ${word}` : word;
-    if (context.measureText(testLine).width <= maxWidth) {
-      currentLine = testLine;
-    } else {
-      if (currentLine) {
-        lines.push(currentLine);
-      }
-      currentLine = word;
-    }
-  });
-
-  if (currentLine) {
-    lines.push(currentLine);
-  }
-
-  const visibleLines = lines.slice(0, maxLines);
-  visibleLines.forEach((line, index) => {
-    const isLastVisibleLine = index === visibleLines.length - 1 && lines.length > maxLines;
-    const output = isLastVisibleLine ? `${line}...` : line;
-    context.fillText(output, x, y + index * lineHeight);
-  });
-}
-
-async function createShareImage(entry) {
-  return createShareArtwork(entry, "square");
-}
-
-async function createShareArtwork(entry, format = "square") {
-  const canvas = document.createElement("canvas");
-  canvas.width = format === "story" ? 1080 : 1080;
-  canvas.height = format === "story" ? 1920 : 1350;
-  const context = canvas.getContext("2d");
-  const cover = await loadImageForCanvas(entry.cover);
-  const stats = getLibraryStats();
-  const isStory = format === "story";
-  const panelY = isStory ? 120 : 60;
-  const panelHeight = isStory ? 1680 : 1230;
-  const coverHeight = isStory ? 760 : 520;
-  const titleY = isStory ? 1010 : 772;
-  const metaY = isStory ? 1248 : 1016;
-  const ratingY = isStory ? 1330 : 1076;
-  const statY = isStory ? 1510 : 1180;
-
-  const background = context.createLinearGradient(0, 0, 0, canvas.height);
-  background.addColorStop(0, "#0f1013");
-  background.addColorStop(1, "#09090b");
-  context.fillStyle = background;
-  context.fillRect(0, 0, canvas.width, canvas.height);
-
-  context.fillStyle = "rgba(19,19,22,0.92)";
-  roundRectPath(context, 60, panelY, 960, panelHeight, 36);
-  context.fill();
-
-  context.strokeStyle = "rgba(255,255,255,0.08)";
-  context.lineWidth = 2;
-  roundRectPath(context, 60, panelY, 960, panelHeight, 36);
-  context.stroke();
-
-  context.fillStyle = "rgba(255,255,255,0.04)";
-  roundRectPath(context, 120, panelY + 50, 840, coverHeight, 30);
-  context.fill();
-
-  if (cover) {
-    context.save();
-    roundRectPath(context, 120, panelY + 50, 840, coverHeight, 30);
-    context.clip();
-    context.drawImage(cover, 120, panelY + 50, 840, coverHeight);
-    context.fillStyle = "rgba(9,9,11,0.18)";
-    context.fillRect(120, panelY + 50, 840, coverHeight);
-    context.restore();
-  } else {
-    context.fillStyle = "#a1a1aa";
-    context.font = "600 34px ui-sans-serif, system-ui, sans-serif";
-    context.textAlign = "center";
-    context.fillText("Caratula no disponible", 540, panelY + 50 + coverHeight / 2);
-    context.textAlign = "left";
-  }
-
-  context.fillStyle = "#fafafa";
-  context.font = "600 22px ui-sans-serif, system-ui, sans-serif";
-  context.fillText("Media Logger Lite", 120, isStory ? 940 : 700);
-
-  context.font = "700 60px ui-sans-serif, system-ui, sans-serif";
-  drawWrappedText(context, entry.title || "Sin titulo", 120, titleY, 840, 68, isStory ? 4 : 3);
-
-  context.fillStyle = "#a1a1aa";
-  context.font = "500 24px ui-sans-serif, system-ui, sans-serif";
-  const metaParts = [TYPE_LABELS[entry.type], STATUS_LABELS[entry.status], formatDate(entry.date)];
-  if (entry.type === "series" && entry.season) {
-    metaParts.push(`T${entry.season}`);
-  }
-  context.fillText(metaParts.join("  \u2022  "), 120, metaY);
-
-  context.fillStyle = "#fafafa";
-  context.font = "600 40px ui-sans-serif, system-ui, sans-serif";
-  context.fillText(formatStars(entry.rating), 120, ratingY);
-
-  const statBoxWidth = 195;
-  const statGap = 15;
-  const statStartX = 120;
-  const statLabels = [
-    ["Total", String(stats.total)],
-    ["Completados", String(stats.completed)],
-    ["En curso", String(stats.inProgress)],
-    ["Media", stats.average],
-  ];
-
-  statLabels.forEach(([label, value], index) => {
-    const x = statStartX + index * (statBoxWidth + statGap);
-    context.fillStyle = "#18181b";
-    roundRectPath(context, x, statY, statBoxWidth, 120, 24);
-    context.fill();
-    context.strokeStyle = "rgba(255,255,255,0.08)";
-    context.stroke();
-
-    context.fillStyle = "#a1a1aa";
-    context.font = "500 20px ui-sans-serif, system-ui, sans-serif";
-    context.textAlign = "center";
-    context.fillText(label, x + statBoxWidth / 2, statY + 42);
-    context.fillStyle = "#fafafa";
-    context.font = "700 34px ui-sans-serif, system-ui, sans-serif";
-    context.fillText(value, x + statBoxWidth / 2, statY + 84);
-  });
-
-  context.textAlign = "left";
-  return canvas;
-}
-
-async function shareEntryCard(entry, format = "square") {
-  try {
-    const canvas = await createShareArtwork(entry, format);
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
-    if (!blob) {
-      throw new Error("No se pudo generar la imagen");
-    }
-
-    const file = new File([blob], `${entry.title || "media-logger"}-${format}.png`, {
-      type: "image/png",
-    });
-
-    if (navigator.canShare && navigator.share && navigator.canShare({ files: [file] })) {
-      await navigator.share({
-        title: entry.title,
-        text: entry.title,
-        files: [file],
-      });
-      return;
-    }
-
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `${(entry.title || "media-logger").replace(/[^\w\-]+/g, "_")}-${format}.png`;
-    anchor.click();
-    URL.revokeObjectURL(url);
-    showToast("Imagen generada");
-  } catch (error) {
-    console.error(error);
-    window.alert("No se pudo generar la imagen para compartir.");
-  }
 }
 
 form.addEventListener("submit", async (event) => {
