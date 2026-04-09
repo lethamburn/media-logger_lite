@@ -627,7 +627,6 @@ function renderEntries() {
     const meta = clone.querySelector(".entry-meta");
     const seasonMarks = clone.querySelector(".season-marks");
     const toggleStatusButton = clone.querySelector(".toggle-status-button");
-    const duplicateButton = clone.querySelector(".duplicate-button");
     const editButton = clone.querySelector(".edit-button");
     const deleteButton = clone.querySelector(".delete-button");
 
@@ -656,19 +655,12 @@ function renderEntries() {
     ratingBadge.hidden = !ratingBadge.textContent;
     toggleStatusButton.title =
       entry.type === "series"
-        ? entry.status === "completed"
-          ? "Reiniciar temporadas"
-          : "Marcar todas vistas"
-        : entry.status === "completed"
-          ? "Pasar a en curso"
-          : "Marcar como completado";
+        ? "Marcar todas vistas"
+        : "Marcar como completado";
     toggleStatusButton.setAttribute("aria-label", toggleStatusButton.title);
-    duplicateButton.hidden = entry.type === "series";
+    toggleStatusButton.hidden = entry.status === "completed";
 
     toggleStatusButton.addEventListener("click", () => toggleEntryStatus(entry.id));
-    if (!duplicateButton.hidden) {
-      duplicateButton.addEventListener("click", () => duplicateEntry(entry.id));
-    }
     editButton.addEventListener("click", () => startEditing(entry.id));
     deleteButton.addEventListener("click", () => deleteEntry(entry.id));
     article.addEventListener("click", (event) => {
@@ -935,40 +927,15 @@ function clearAllEntries() {
   });
 }
 
-function duplicateEntry(entryId) {
-  const entry = state.entries.find((item) => item.id === entryId);
-  if (!entry) {
-    return;
-  }
-
-  const today = new Date().toISOString().slice(0, 10);
-  const duplicate = {
-    ...entry,
-    id: crypto.randomUUID(),
-    date: today,
-    status: "in-progress",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  state.entries = [duplicate, ...state.entries];
-  saveEntries();
-  render();
-  registerMutation("Registro duplicado");
-}
-
 function toggleEntryStatus(entryId) {
   const entry = state.entries.find((item) => item.id === entryId);
-  if (!entry) {
+  if (!entry || entry.status === "completed") {
     return;
   }
 
   if (entry.type === "series") {
     const totalSeasons = Math.max(Number(entry.totalSeasons) || 0, 0);
-    const watchedSeasons =
-      entry.status === "completed"
-        ? []
-        : Array.from({ length: totalSeasons }, (_, index) => index + 1);
+    const watchedSeasons = Array.from({ length: totalSeasons }, (_, index) => index + 1);
     const nextStatus = deriveSeriesStatus(totalSeasons, watchedSeasons);
 
     state.entries = state.entries.map((item) =>
@@ -990,11 +957,11 @@ function toggleEntryStatus(entryId) {
       }
     }
     render();
-    registerMutation(nextStatus === "completed" ? "Serie marcada como completa" : "Serie reiniciada");
+    registerMutation("Serie marcada como completa");
     return;
   }
 
-  const nextStatus = entry.status === "completed" ? "in-progress" : "completed";
+  const nextStatus = "completed";
   state.entries = state.entries.map((item) =>
     item.id === entryId
       ? {
@@ -1012,7 +979,7 @@ function toggleEntryStatus(entryId) {
     }
   }
   render();
-  registerMutation(nextStatus === "completed" ? "Marcado como completado" : "Pasado a en curso");
+  registerMutation("Marcado como completado");
 }
 
 form.addEventListener("submit", async (event) => {
