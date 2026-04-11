@@ -606,9 +606,23 @@ h2 {
 .entry-card {
   overflow: hidden;
   background: rgba(17, 17, 19, 0.92);
-  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease,
+    filter 180ms ease,
+    opacity 180ms ease;
   cursor: pointer;
   animation: card-enter 260ms ease both;
+}
+
+.entry-card[data-status="in-progress"],
+.entry-card[data-status="planned"],
+.entry-card[data-status="paused"],
+.entry-card[data-status="dropped"] {
+  filter: grayscale(1);
+  opacity: 0.72;
 }
 
 .entry-card:hover {

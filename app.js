@@ -631,6 +631,7 @@ function renderEntries() {
     const deleteButton = clone.querySelector(".delete-button");
 
     article.dataset.id = entry.id;
+    article.dataset.status = entry.status;
     article.tabIndex = 0;
     cover.src = entry.cover;
     cover.alt = `Caratula de ${entry.title}`;
