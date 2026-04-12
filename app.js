@@ -1128,9 +1128,21 @@ viewButtons.forEach((button) => {
 
 if ("serviceWorker" in navigator && window.isSecureContext) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch((error) => {
-      console.error("No se pudo registrar el service worker:", error);
-    });
+    navigator.serviceWorker.getRegistrations()
+      .then((registrations) =>
+        Promise.all(registrations.map((registration) => registration.unregister()))
+      )
+      .catch((error) => {
+        console.error("No se pudieron limpiar los service workers:", error);
+      });
+
+    if ("caches" in window) {
+      caches.keys()
+        .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+        .catch((error) => {
+          console.error("No se pudo limpiar la caché de la app:", error);
+        });
+    }
   });
 }
 
